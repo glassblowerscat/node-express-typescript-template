@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev index.ts",
+    "dev": "NODE_ENV=development ts-node-dev index.ts",
     "start": "tsc --build && node dist/index.js",
     "start:clean": "rm -rf dist && tsc --build && node dist/index.js",
     "format": "prettier . --write",
