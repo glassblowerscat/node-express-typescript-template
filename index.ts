@@ -5,7 +5,9 @@ import express from "express"
 import { graphqlHTTP } from "express-graphql"
 import { makeExecutableSchema } from "@graphql-tools/schema"
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient({
+  log: ["query", "info", `warn`, `error`],
+})
 
 const typeDefs = `
   type FileNode {
