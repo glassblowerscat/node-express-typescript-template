@@ -2,7 +2,7 @@ import { GetObjectOutput, HeadObjectOutput } from "aws-sdk/clients/s3"
 import { promises as fs } from "fs"
 import { DateTime } from "luxon"
 import { dirname, join } from "path"
-import { FileBucket, SIGNED_URL_EXPIRES } from "./definitions"
+import { FileBucket, SIGNED_URL_EXPIRES } from "./bucket"
 
 // TODO: Actually set these
 const rootDir = ""

@@ -1,6 +1,6 @@
 import { S3 } from "aws-sdk"
 import { HeadObjectOutput } from "aws-sdk/clients/s3"
-import { FileBucket, SIGNED_URL_EXPIRES } from "./definitions"
+import { FileBucket, SIGNED_URL_EXPIRES } from "./bucket"
 
 const s3 = new S3()
 
