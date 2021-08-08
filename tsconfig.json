@@ -3,7 +3,7 @@
     "baseUrl": ".",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "module": "commonjs",
     "noImplicitAny": true,
     "outDir": "dist",
