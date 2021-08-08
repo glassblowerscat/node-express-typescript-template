@@ -15,9 +15,9 @@ model File {
   name        String
   directory   Directory     @relation(fields: [directoryId], references: [id])
   directoryId String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @default(now())
   FileVersion FileVersion[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model FileVersion {
@@ -28,6 +28,7 @@ model FileVersion {
   mimeType  String
   size      Int
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Directory {
@@ -37,4 +38,6 @@ model Directory {
   parentId  String?
   Directory Directory[] @relation("DirectoryToDirectory")
   File      File[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
