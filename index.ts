@@ -9,24 +9,24 @@ const prisma = new PrismaClient({
   log: ["query", "info", `warn`, `error`],
 })
 
-const typeDefs = `
+const typeDefs = /* GraphQL */ `
   type FileNode {
-	    id: String!
-	    name: String!
-      type: FileNodeType!
-      createdAt: String!
-	  }
+    id: String!
+    name: String!
+    type: FileNodeType!
+    createdAt: String!
+  }
 
-	  type Query {
-	    allFiles: [FileNode!]!
-	  }
+  type Query {
+    allFiles: [FileNode!]!
+  }
 
-    enum FileNodeType {
-      DIRECTORY
-      FILE
-      FILE_VERSION
-    }
-	`
+  enum FileNodeType {
+    DIRECTORY
+    FILE
+    FILE_VERSION
+  }
+`
 
 const resolvers = {
   Query: {
