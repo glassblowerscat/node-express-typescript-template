@@ -6,13 +6,13 @@ const s3 = new S3()
 
 export function getS3Bucket(bucketId: string): FileBucket {
   return {
-    getSignedUrl: getSignedUrl.bind(bucketId),
-    headObject: headObject.bind(bucketId),
-    moveObject: moveObject.bind(bucketId),
+    getSignedUrl: getSignedUrl.bind(null, bucketId),
+    headObject: headObject.bind(null, bucketId),
+    moveObject: moveObject.bind(null, bucketId),
   }
 }
 
-function getSignedUrl(operation: string, key: string, bucketId: string) {
+function getSignedUrl(bucketId: string, operation: string, key: string) {
   return s3.getSignedUrlPromise(operation, {
     Bucket: bucketId,
     Key: key,
@@ -21,8 +21,8 @@ function getSignedUrl(operation: string, key: string, bucketId: string) {
 }
 
 async function headObject(
-  key: string,
-  bucketId: string
+  bucketId: string,
+  key: string
 ): Promise<HeadObjectOutput> {
   return await s3
     .headObject({
@@ -32,12 +32,12 @@ async function headObject(
     .promise()
 }
 
-async function moveObject(oldKey: string, newKey: string, bucketId: string) {
+async function moveObject(bucketId: string, oldKey: string, newKey: string) {
   await copyObject(oldKey, newKey, bucketId)
   await deleteObject(oldKey, bucketId)
 }
 
-async function copyObject(oldKey: string, newKey: string, bucketId: string) {
+async function copyObject(bucketId: string, oldKey: string, newKey: string) {
   await s3
     .copyObject({
       Bucket: bucketId,
@@ -47,7 +47,7 @@ async function copyObject(oldKey: string, newKey: string, bucketId: string) {
     .promise()
 }
 
-async function deleteObject(key: string, bucketId: string) {
+async function deleteObject(bucketId: string, key: string) {
   await s3
     .deleteObject({
       Bucket: bucketId,
