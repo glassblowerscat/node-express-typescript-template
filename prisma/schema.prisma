@@ -10,15 +10,31 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model FileNode {
-  id        String       @id @default(uuid())
-  name      String
-  type      FileNodeType
-  createdAt DateTime     @default(now())
+model File {
+  id          String        @id @default(uuid())
+  name        String
+  directory   Directory     @relation(fields: [directoryId], references: [id])
+  directoryId String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now())
+  FileVersion FileVersion[]
 }
 
-enum FileNodeType {
-  DIRECTORY
-  FILE
-  FILE_VERSION
+model FileVersion {
+  id        String   @id @default(uuid())
+  file      File     @relation(fields: [fileId], references: [id])
+  fileId    String
+  fileName  String
+  mimeType  String
+  size      Int
+  createdAt DateTime @default(now())
+}
+
+model Directory {
+  id        String      @id @default(uuid())
+  name      String
+  parent    Directory?  @relation(fields: [parentId], references: [id])
+  parentId  String?
+  Directory Directory[] @relation("DirectoryToDirectory")
+  File      File[]
 }

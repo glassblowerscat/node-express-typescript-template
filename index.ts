@@ -10,18 +10,18 @@ const prisma = new PrismaClient({
 })
 
 const typeDefs = /* GraphQL */ `
-  type FileNode {
+  type File {
     id: String!
     name: String!
-    type: FileNodeType!
+    mimeType: MimeType!
     createdAt: String!
   }
 
   type Query {
-    allFiles: [FileNode!]!
+    allFiles: [File!]!
   }
 
-  enum FileNodeType {
+  enum MimeType {
     DIRECTORY
     FILE
     FILE_VERSION
@@ -31,7 +31,7 @@ const typeDefs = /* GraphQL */ `
 const resolvers = {
   Query: {
     allFiles: () => {
-      return prisma.fileNode.findMany()
+      return prisma.file.findMany()
     },
   },
 }
