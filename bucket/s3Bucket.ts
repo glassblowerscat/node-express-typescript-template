@@ -1,6 +1,6 @@
 import { S3 } from "aws-sdk"
 import { HeadObjectOutput } from "aws-sdk/clients/s3"
-import { FileBucket, SIGNED_URL_EXPIRES } from "./bucket"
+import { FileBucket, SIGNED_URL_EXPIRES, FileUpload } from "./bucket"
 
 const s3 = new S3()
 
@@ -9,6 +9,7 @@ export function getS3Bucket(bucketId: string): FileBucket {
     getSignedUrl: getSignedUrl.bind(null, bucketId),
     headObject: headObject.bind(null, bucketId),
     moveObject: moveObject.bind(null, bucketId),
+    saveFile: uploadFile.bind(null, bucketId),
   }
 }
 
@@ -30,6 +31,23 @@ async function headObject(
       Key: key,
     })
     .promise()
+}
+
+async function uploadFile(
+  bucketId: string,
+  key: string,
+  file: FileUpload
+): Promise<string> {
+  const { Body, ..._ } = file
+  await s3
+    .upload({
+      Bucket: bucketId,
+      Key: key,
+      Body,
+    })
+    .promise()
+  const url = await getSignedUrl(bucketId, "getObject", key)
+  return url
 }
 
 async function moveObject(bucketId: string, oldKey: string, newKey: string) {
