@@ -22,6 +22,7 @@ module.exports = {
         varsIgnorePattern: "^_",
         args: "all",
         argsIgnorePattern: "^_",
+        ignoreRestSiblings: true,
       },
     ],
     "@typescript-eslint/explicit-member-accessibility": [
