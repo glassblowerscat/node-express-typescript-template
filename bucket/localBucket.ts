@@ -113,27 +113,22 @@ export async function upload(signed: string, file: FakeAwsFile): Promise<void> {
 }
 
 function validateSignedUrl(operation: string, url: string) {
-  let raw
+  const searchParams = new URL(url).searchParams
+  const rawSigned = searchParams.get("signed") ?? url
   try {
-    raw = new URL(url).searchParams.get("signed")
-  } catch {
-    raw = url
-  }
-  let parsed
-  try {
-    parsed = JSON.parse(raw ?? url) as {
+    const signed = JSON.parse(rawSigned) as {
       operation: string
       key: string
       expires: number
     }
-  } catch (e) {
-    throw new Error(e)
+    if (signed.operation !== operation) {
+      throw new Error("Incorrect operation")
+    }
+    if (DateTime.local() > DateTime.fromMillis(signed.expires)) {
+      throw new Error("URL expired")
+    }
+    return signed.key
+  } catch (error) {
+    throw new Error(error)
   }
-  if (parsed.operation !== operation) {
-    throw new Error("Incorrect operation")
-  }
-  if (DateTime.local() > DateTime.fromMillis(parsed.expires)) {
-    throw new Error("URL expired")
-  }
-  return parsed.key
 }
