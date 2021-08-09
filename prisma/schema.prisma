@@ -18,17 +18,20 @@ model File {
   FileVersion FileVersion[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
 }
 
 model FileVersion {
-  id        String   @id @default(uuid())
-  file      File     @relation(fields: [fileId], references: [id])
+  id        String    @id @default(uuid())
+  file      File      @relation(fields: [fileId], references: [id])
   fileId    String
   fileName  String
   mimeType  String
   size      Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model Directory {
@@ -40,4 +43,5 @@ model Directory {
   File      File[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+  deletedAt DateTime?
 }
