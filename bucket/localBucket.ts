@@ -103,10 +103,7 @@ export async function download(signedUrl: string): Promise<FakeAwsFile> {
   return await getObject(key)
 }
 
-export async function upload(
-  signed: string,
-  file: FakeAwsFile & File
-): Promise<void> {
+export async function upload(signed: string, file: FakeAwsFile): Promise<void> {
   const key = validateSignedUrl("putObject", signed)
   await saveFile(key, {
     ContentLength: file.Body.byteLength,
