@@ -1,6 +1,6 @@
 import { S3 } from "aws-sdk"
 import { HeadObjectOutput } from "aws-sdk/clients/s3"
-import { FileBucket, SIGNED_URL_EXPIRES, FileUpload } from "./bucket"
+import { FakeAwsFile, FileBucket, SIGNED_URL_EXPIRES } from "./bucket"
 
 const s3 = new S3()
 
@@ -36,7 +36,7 @@ async function headObject(
 async function uploadFile(
   bucketId: string,
   key: string,
-  file: FileUpload
+  file: FakeAwsFile
 ): Promise<string> {
   const { Body, ..._ } = file
   await s3

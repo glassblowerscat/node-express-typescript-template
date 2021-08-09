@@ -1,1 +1,1 @@
-export { getBucket } from "./bucket"
+export { FakeAwsFile, getBucket } from "./bucket"
