@@ -18,10 +18,10 @@ export async function createDirectory(
 export async function getDirectory(
   client: PrismaClient,
   id: Directory["id"]
-): Promise<Directory & { Directory: Directory[] } & { File: File[] }> {
+): Promise<Directory & { directories: Directory[] } & { files: File[] }> {
   const directory = await client.directory.findUnique({
     where: { id },
-    include: { Directory: true, File: true },
+    include: { directories: true, files: true },
   })
   if (directory) return directory
   throw new Error("Directory not found")
@@ -46,10 +46,10 @@ export async function deleteDirectory(
 ): Promise<void> {
   const directory = await client.directory.findUnique({
     where: { id },
-    include: { Directory: true, File: true },
+    include: { directories: true, files: true },
   })
   if (directory) {
-    const { Directory: directories, File: files } = directory
+    const { directories, files } = directory
     for (const file of files) {
       await deleteFile(client, file.id)
     }
