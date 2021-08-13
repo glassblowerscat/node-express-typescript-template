@@ -1,5 +1,5 @@
 import { Directory, File, PrismaClient } from "@prisma/client"
-import { deleteFile } from "./file"
+import { deleteFile } from "../file/service"
 
 export async function createDirectory(
   client: PrismaClient,
