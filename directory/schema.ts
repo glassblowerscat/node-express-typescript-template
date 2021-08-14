@@ -1,31 +1,32 @@
 import { createModule, gql } from "graphql-modules"
 import { prismaClient } from "../prisma"
 
-export const fileModule = createModule({
-  id: "file-module",
+export const directoryModule = createModule({
+  id: "directory-module",
   dirname: __dirname,
   typeDefs: [
     gql`
-      type File {
+      type Directory {
         id: String!
         name: String!
-        directory: Directory!
-        directoryId: String!
-        versions: [FileVersion!]!
+        parent: Directory
+        parentId: String
+        directories: [Directory]!
+        files: [File]!
         createdAt: String!
         updatedAt: String!
         deletedAt: String
       }
 
       extend type Query {
-        allFiles: [File!]!
+        allDirectories: [Directory!]!
       }
     `,
   ],
   resolvers: {
     Query: {
-      allFiles: async () => {
-        return await prismaClient().file.findMany()
+      allDirectories: async () => {
+        return await prismaClient().directory.findMany()
       },
     },
   },
