@@ -27,13 +27,28 @@ export async function createDirectory(
 export async function getDirectory(
   client: PrismaClient,
   id: Directory["id"]
-): Promise<Directory & { directories: Directory[] } & { files: File[] }> {
-  const directory = await client.directory.findUnique({
+): Promise<
+  (Directory & { directories: Directory[] } & { files: File[] }) | null
+> {
+  return client.directory.findUnique({
     where: { id },
     include: { directories: true, files: true },
   })
-  if (directory) return directory
-  throw new Error("Directory not found")
+}
+
+export async function findDirectories(
+  client: PrismaClient,
+  query: string
+): Promise<Directory[]> {
+  return await client.directory.findMany({
+    where: {
+      name: {
+        contains: query,
+        mode: "insensitive",
+      },
+    },
+    orderBy: [{ name: "asc" }],
+  })
 }
 
 export async function getDirectoryContents(
@@ -49,6 +64,8 @@ export async function getDirectoryContents(
     return Object.prototype.hasOwnProperty.call(item, "directoryId")
   }
   if (directory) {
+    const { field, direction } = sort ?? {}
+    const { pageLength = 20, page = 1 } = pagination ?? {}
     const files = await client.file.findMany({
       where: { directoryId: id, deletedAt: null },
       orderBy: { name: "asc" },
@@ -58,7 +75,7 @@ export async function getDirectoryContents(
       orderBy: { name: "asc" },
     })
     const contents =
-      !sort || sort.field === "name"
+      !field || field === "name"
         ? [...files, ...directories].sort((a, b) => {
             return a.name > b.name ? 1 : a.name < b.name ? -1 : 0
           })
@@ -69,7 +86,6 @@ export async function getDirectoryContents(
               return a.name > b.name ? 1 : a.name < b.name ? -1 : 0
             }),
             ...files.sort((a, b) => {
-              const { field, direction } = sort
               return a[field] > b[field]
                 ? direction === "ASC"
                   ? 1
@@ -81,9 +97,7 @@ export async function getDirectoryContents(
                 : 0
             }),
           ]
-    const paginatedContents = pagination
-      ? contents.slice(pagination.page - 1, pagination.pageLength)
-      : contents
+    const paginatedContents = contents.slice(page - 1, pageLength)
     const paginatedFiles = paginatedContents.filter((item) =>
       isFile(item)
     ) as File[]

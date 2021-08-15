@@ -3,11 +3,6 @@ import { createModule, gql } from "graphql-modules"
 import * as fileService from "./service"
 import { prismaClient } from "../prisma"
 
-/**
- * NEXT UPPPPPP: SEARCH DIRECTORY CONTENTS USING FILTERS
- * ALSO: queryRaw to get paginated/sorted Directory contents?
- */
-
 export const fileModule = createModule({
   id: "file-module",
   dirname: __dirname,

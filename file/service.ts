@@ -41,6 +41,22 @@ export async function getFile(
   })
 }
 
+export async function findFiles(
+  client: PrismaClient,
+  query: string
+): Promise<File[] | null> {
+  return await client.file.findMany({
+    where: {
+      name: {
+        contains: query,
+        mode: "insensitive",
+      },
+    },
+    orderBy: [{ name: "asc" }],
+    include: { versions: { where: { deletedAt: null } } },
+  })
+}
+
 export async function renameFile(
   client: PrismaClient,
   id: File["id"],
