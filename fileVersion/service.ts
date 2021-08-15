@@ -40,7 +40,9 @@ export async function getFileVersions(
   client: PrismaClient,
   fileId: File["id"]
 ): Promise<FileVersion[]> {
-  return await client.fileVersion.findMany({ where: { fileId } })
+  return await client.fileVersion.findMany({
+    where: { fileId, deletedAt: null },
+  })
 }
 
 export async function renameFileVersion(

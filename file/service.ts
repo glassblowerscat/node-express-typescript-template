@@ -37,7 +37,7 @@ export async function getFile(
 ): Promise<File | null> {
   return await client.file.findUnique({
     where: { id },
-    include: { versions: true },
+    include: { versions: { where: { deletedAt: null } } },
   })
 }
 
