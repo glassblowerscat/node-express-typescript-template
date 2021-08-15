@@ -2,10 +2,30 @@
 require("dotenv").config()
 import express from "express"
 import { graphqlHTTP } from "express-graphql"
-import { createApplication } from "graphql-modules"
+import { createApplication, createModule, gql } from "graphql-modules"
 import { directoryModule } from "./directory"
 import { fileModule } from "./file"
 import { fileVersionModule } from "./fileVersion"
+
+export const mainModule = createModule({
+  id: "main-module",
+  dirname: __dirname,
+  typeDefs: [
+    gql`
+      interface FileNode {
+        id: ID!
+        name: String!
+        createdAt: String!
+        updatedAt: String
+        deletedAt: String
+      }
+
+      extend type Query {
+        searchFiles(query: String!): [FileNode]
+      }
+    `,
+  ],
+})
 
 const api = createApplication({
   modules: [directoryModule, fileModule, fileVersionModule],

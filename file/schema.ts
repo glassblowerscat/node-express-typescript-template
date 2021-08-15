@@ -3,19 +3,19 @@ import { createModule, gql } from "graphql-modules"
 import * as fileService from "./service"
 import { prismaClient } from "../prisma"
 
+/**
+ * NEXT UPPPPPP: SEARCH DIRECTORY CONTENTS USING FILTERS
+ * ALSO: queryRaw to get paginated/sorted Directory contents?
+ */
+
 export const fileModule = createModule({
   id: "file-module",
   dirname: __dirname,
   typeDefs: [
     gql`
-      type File {
-        id: ID!
-        name: String!
+      type File implements FileNode {
         directoryId: ID!
         versions: [FileVersion]!
-        createdAt: String!
-        updatedAt: String!
-        deletedAt: String
       }
 
       # Combining File and FileVersion, because we will

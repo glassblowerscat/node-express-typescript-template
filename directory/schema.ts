@@ -8,15 +8,10 @@ export const directoryModule = createModule({
   dirname: __dirname,
   typeDefs: [
     gql`
-      type Directory {
-        id: ID!
-        name: String!
+      type Directory implements FileNode {
         parentId: ID
         directories: [Directory]!
         files: [File]!
-        createdAt: String!
-        updatedAt: String!
-        deletedAt: String
       }
 
       input SortInput {

@@ -2,7 +2,7 @@ import { File, FileVersion, Prisma, PrismaClient } from "@prisma/client"
 import { getBucket } from "../bucket"
 
 const fileVersionInputFields = Prisma.validator<Prisma.FileVersionArgs>()({
-  select: { fileId: true, fileName: true, mimeType: true, size: true },
+  select: { fileId: true, name: true, mimeType: true, size: true },
 })
 
 export type CreateFileVersionInput = Prisma.FileVersionGetPayload<
@@ -18,7 +18,7 @@ export async function createFileVersionRecord(
   // with this new file?
   const bucket = getBucket()
   if (bucket) {
-    const url = await bucket.getSignedUrl("putObject", fileVersion.fileName)
+    const url = await bucket.getSignedUrl("putObject", fileVersion.name)
     return {
       ...versionData,
       url,
@@ -48,11 +48,11 @@ export async function getFileVersions(
 export async function renameFileVersion(
   client: PrismaClient,
   id: FileVersion["id"],
-  fileName: FileVersion["fileName"]
+  name: FileVersion["name"]
 ): Promise<FileVersion> {
   return await client.fileVersion.update({
     where: { id },
-    data: { fileName },
+    data: { name },
   })
 }
 

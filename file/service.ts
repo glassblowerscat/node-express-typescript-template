@@ -19,7 +19,7 @@ export async function createFileRecord(
     directoryId,
     versions: {
       create: {
-        fileName: name,
+        name,
         mimeType,
         size,
       },
