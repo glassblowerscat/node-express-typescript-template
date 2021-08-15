@@ -20,6 +20,8 @@ model File {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   deletedAt   DateTime?
+
+  @@map("files")
 }
 
 model FileVersion {
@@ -32,6 +34,8 @@ model FileVersion {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  @@map("file_versions")
 }
 
 model Directory {
@@ -44,4 +48,6 @@ model Directory {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   deletedAt   DateTime?
+
+  @@map("directories")
 }
