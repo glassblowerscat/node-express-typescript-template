@@ -9,10 +9,6 @@ import { directoryModule, findDirectories } from "./directory"
 import { fileModule, findFiles } from "./file"
 import { fileVersionModule } from "./fileVersion"
 
-/**
- * queryRaw to get paginated/sorted Directory contents?
- */
-
 export interface Pagination {
   pageLength: number
   page: number
