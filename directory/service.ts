@@ -5,6 +5,11 @@ export interface Pagination {
   page: number
 }
 
+export interface Sort {
+  field: keyof Pick<File, "name" | "createdAt" | "updatedAt">
+  direction?: "ASC" | "DESC"
+}
+
 export async function createDirectory(
   client: PrismaClient,
   name: Directory["name"],
@@ -34,7 +39,8 @@ export async function getDirectory(
 export async function getDirectoryContents(
   client: PrismaClient,
   id: Directory["id"],
-  pagination?: Pagination
+  pagination?: Pagination,
+  sort?: Sort
 ): Promise<Directory & { directories: Directory[] } & { files: File[] }> {
   const directory = await client.directory.findUnique({
     where: { id },
@@ -51,13 +57,30 @@ export async function getDirectoryContents(
       where: { parentId: id, deletedAt: null },
       orderBy: { name: "asc" },
     })
-    const contents = [...files, ...directories].sort((a, b) => {
-      return a.name.toUpperCase() > b.name.toUpperCase()
-        ? 1
-        : a.name.toUpperCase() < b.name.toUpperCase()
-        ? -1
-        : 0
-    })
+    const contents =
+      !sort || sort.field === "name"
+        ? [...files, ...directories].sort((a, b) => {
+            return a.name > b.name ? 1 : a.name < b.name ? -1 : 0
+          })
+        : // If we're sorting by anything other than name,
+          // we'll put all directories first.
+          [
+            ...directories.sort((a, b) => {
+              return a.name > b.name ? 1 : a.name < b.name ? -1 : 0
+            }),
+            ...files.sort((a, b) => {
+              const { field, direction } = sort
+              return a[field] > b[field]
+                ? direction === "ASC"
+                  ? 1
+                  : -1
+                : a[field] < b[field]
+                ? direction === "ASC"
+                  ? -1
+                  : 1
+                : 0
+            }),
+          ]
     const paginatedContents = pagination
       ? contents.slice(pagination.page - 1, pagination.pageLength)
       : contents
