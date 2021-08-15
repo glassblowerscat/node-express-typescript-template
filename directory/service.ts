@@ -43,7 +43,7 @@ export async function renameDirectory(
 export async function deleteDirectory(
   client: PrismaClient,
   id: Directory["id"]
-): Promise<void> {
+): Promise<boolean> {
   const directory = await client.directory.findUnique({
     where: { id },
     include: { directories: true, files: true },
@@ -56,6 +56,7 @@ export async function deleteDirectory(
     for (const dir of directories) {
       await deleteDirectory(client, dir.id)
     }
+    return true
   } else {
     throw new Error("Directory not found")
   }

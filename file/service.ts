@@ -1,33 +1,44 @@
-import { File, PrismaClient } from "@prisma/client"
+import { File, Prisma, PrismaClient } from "@prisma/client"
 import { download, FakeAwsFile, getBucket, upload } from "../bucket"
+import { CreateFileVersionInput } from "../fileVersion"
+
+const fileInputFields = Prisma.validator<Prisma.FileArgs>()({
+  select: { name: true, directoryId: true, versions: true },
+})
+
+export type CreateFileInput = Prisma.FileGetPayload<typeof fileInputFields> &
+  CreateFileVersionInput
 
 export async function createFileRecord(
   client: PrismaClient,
-  file: File
-): Promise<File & { url: string }> {
-  const fileData = await client.file.create({ data: file })
-  // TODO: Do we need to manually update the directory
-  // with this new file?
-  const bucket = getBucket()
-  if (bucket) {
-    const url = await bucket.getSignedUrl("putObject", file.name)
-    return {
-      ...fileData,
-      url,
-    }
-  } else {
-    await client.file.delete({ where: { id: fileData.id } })
-    throw new Error("Could not instantiate file bucket")
+  file: CreateFileInput
+): Promise<{ file: File; url: string }> {
+  const { name, directoryId, mimeType, size } = file
+  const data = {
+    name,
+    directoryId,
+    versions: {
+      create: {
+        fileName: name,
+        mimeType,
+        size,
+      },
+    },
   }
+  const fileData = await client.file.create({ data })
+  const bucket = getBucket()
+  const url = await bucket.getSignedUrl("putObject", name)
+  return { file: fileData, url }
 }
 
 export async function getFile(
   client: PrismaClient,
   id: File["id"]
-): Promise<File> {
-  const file = await client.file.findUnique({ where: { id } })
-  if (file) return file
-  throw new Error("File not found")
+): Promise<File | null> {
+  return await client.file.findUnique({
+    where: { id },
+    include: { versions: true },
+  })
 }
 
 export async function renameFile(
@@ -45,8 +56,9 @@ export async function renameFile(
 export async function deleteFile(
   client: PrismaClient,
   id: File["id"]
-): Promise<void> {
+): Promise<boolean> {
   await client.file.delete({ where: { id } })
+  return true
 }
 
 export async function downloadLocalFile(

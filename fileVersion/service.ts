@@ -1,9 +1,17 @@
-import { FileVersion, PrismaClient } from "@prisma/client"
+import { File, FileVersion, Prisma, PrismaClient } from "@prisma/client"
 import { getBucket } from "../bucket"
 
-export async function createFileRecord(
+const fileVersionInputFields = Prisma.validator<Prisma.FileVersionArgs>()({
+  select: { fileId: true, fileName: true, mimeType: true, size: true },
+})
+
+export type CreateFileVersionInput = Prisma.FileVersionGetPayload<
+  typeof fileVersionInputFields
+>
+
+export async function createFileVersionRecord(
   client: PrismaClient,
-  fileVersion: FileVersion
+  fileVersion: CreateFileVersionInput
 ): Promise<FileVersion & { url: string }> {
   const versionData = await client.fileVersion.create({ data: fileVersion })
   // TODO: Do we need to manually update the directory
@@ -24,10 +32,15 @@ export async function createFileRecord(
 export async function getFileVersion(
   client: PrismaClient,
   id: FileVersion["id"]
-): Promise<FileVersion> {
-  const version = await client.fileVersion.findUnique({ where: { id } })
-  if (version) return version
-  throw new Error("File Version not found")
+): Promise<FileVersion | null> {
+  return await client.fileVersion.findUnique({ where: { id } })
+}
+
+export async function getFileVersions(
+  client: PrismaClient,
+  fileId: File["id"]
+): Promise<FileVersion[]> {
+  return await client.fileVersion.findMany({ where: { fileId } })
 }
 
 export async function renameFileVersion(
@@ -35,16 +48,16 @@ export async function renameFileVersion(
   id: FileVersion["id"],
   fileName: FileVersion["fileName"]
 ): Promise<FileVersion> {
-  const updatedFile = await client.fileVersion.update({
+  return await client.fileVersion.update({
     where: { id },
     data: { fileName },
   })
-  return updatedFile
 }
 
 export async function deleteFileVersion(
   client: PrismaClient,
   id: FileVersion["id"]
-): Promise<void> {
+): Promise<boolean> {
   await client.fileVersion.delete({ where: { id } })
+  return true
 }
