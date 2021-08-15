@@ -1,4 +1,5 @@
 import { File, FileVersion, Prisma, PrismaClient } from "@prisma/client"
+import { Pagination } from "../app"
 import { getBucket } from "../bucket"
 
 const fileVersionInputFields = Prisma.validator<Prisma.FileVersionArgs>()({
@@ -38,9 +39,12 @@ export async function getFileVersion(
 
 export async function getFileVersions(
   client: PrismaClient,
-  fileId: File["id"]
+  fileId: File["id"],
+  pagination?: Pagination
 ): Promise<FileVersion[]> {
   return await client.fileVersion.findMany({
+    ...(pagination ? { skip: pagination.page * pagination.pageLength } : {}),
+    ...(pagination ? { take: pagination.pageLength } : {}),
     where: { fileId, deletedAt: null },
   })
 }

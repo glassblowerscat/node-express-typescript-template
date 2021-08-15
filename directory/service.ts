@@ -1,9 +1,5 @@
 import { Directory, File, PrismaClient } from "@prisma/client"
-
-export interface Pagination {
-  pageLength: number
-  page: number
-}
+import { Pagination } from "../app"
 
 export interface Sort {
   field: keyof Pick<File, "name" | "createdAt" | "updatedAt">
