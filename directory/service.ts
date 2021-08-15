@@ -47,6 +47,37 @@ export async function findDirectories(
   })
 }
 
+export async function getDirectoryContentsRaw(
+  client: PrismaClient,
+  id: Directory["id"],
+  pagination?: Pagination,
+  sort?: Sort
+): Promise<Directory> {
+  return await client.$queryRaw<Directory>`
+    SELECT directories.id, directories.name, files.id, files.name, files.createdAt, files.updatedAt FROM
+      (SELECT * FROM directories WHERE id = ${id}
+        INNER JOIN (SELECT * FROM directories) AS subd
+          ON subd.directoryId = directories.id
+            AND subd.deletedAt = NULL
+        INNER JOIN files
+          ON files.directoryId = directories.id
+            AND files.deletedAt = NULL
+      )
+    ORDER BY ${
+      !sort || sort.field === "name"
+        ? `subd.name, f.name`
+        : `subd.${sort.field}, f.${sort.field}`
+    } ${sort?.direction ?? "ASC"}
+    ${
+      pagination
+        ? `LIMIT ${pagination.pageLength} OFFSET ${
+            pagination.pageLength * pagination.page - 1
+          }`
+        : ""
+    }
+  `
+}
+
 export async function getDirectoryContents(
   client: PrismaClient,
   id: Directory["id"],
