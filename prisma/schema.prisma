@@ -28,7 +28,7 @@ model FileVersion {
   id        String    @id @default(uuid())
   file      File      @relation(fields: [fileId], references: [id], onDelete: Cascade)
   fileId    String
-  fileName  String
+  name      String
   mimeType  String
   size      Int
   createdAt DateTime  @default(now())
