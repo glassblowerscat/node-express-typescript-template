@@ -60,9 +60,9 @@ export async function getDirectoryContentsRaw(
           ON subd.directoryId = directories.id
             AND subd.deletedAt = NULL
         INNER JOIN (SELECT * FROM files
-            INNER JOIN versions
-              ON versions.fileID = files.id
-                AND versions.deletedAt = NULL)
+            INNER JOIN file_versions
+              ON file_versions.fileID = files.id
+                AND file_versions.deletedAt = NULL)
           ON files.directoryId = directories.id
             AND files.deletedAt = NULL
       )
