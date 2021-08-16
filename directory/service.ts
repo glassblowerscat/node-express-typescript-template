@@ -101,22 +101,24 @@ export async function getDirectoryContents(
   if (directory) {
     const { field, direction } = sort ?? {}
     const { pageLength = 20, page = 1 } = pagination ?? {}
-    const files = await client.directory
-      .findUnique({
-        where: { id },
-      })
-      .files({
-        where: { deletedAt: null },
-        orderBy: { name: "asc" },
-      })
-    const directories = await client.directory
-      .findUnique({
-        where: { id },
-      })
-      .directories({
-        where: { deletedAt: null },
-        orderBy: { name: "asc" },
-      })
+    const [files, directories] = await client.$transaction([
+      client.directory
+        .findUnique({
+          where: { id },
+        })
+        .files({
+          where: { deletedAt: null },
+          orderBy: { name: "asc" },
+        }),
+      client.directory
+        .findUnique({
+          where: { id },
+        })
+        .directories({
+          where: { deletedAt: null },
+          orderBy: { name: "asc" },
+        }),
+    ])
     const contents =
       !field || field === "name"
         ? [...files, ...directories].sort((a, b) => {
@@ -161,20 +163,22 @@ export async function countDirectoryChildren(
   client: PrismaClient,
   id: Directory["id"]
 ): Promise<number> {
-  const directories = await client.directory.count({
-    where: {
-      ancestors: {
-        has: id,
+  const [files, directories] = await client.$transaction([
+    client.file.count({
+      where: {
+        ancestors: {
+          has: id,
+        },
       },
-    },
-  })
-  const files = await client.file.count({
-    where: {
-      ancestors: {
-        has: id,
+    }),
+    client.directory.count({
+      where: {
+        ancestors: {
+          has: id,
+        },
       },
-    },
-  })
+    }),
+  ])
   return directories + files
 }
 
