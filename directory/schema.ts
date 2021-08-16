@@ -39,6 +39,8 @@ export const directoryModule = createModule({
           pagination: PaginationInput
           sort: SortInput
         ): Directory
+        countDirectoryChildren(id: ID!): Int!
+        getDirectorySize(id: ID!): Int
       }
 
       extend type Mutation {
@@ -68,6 +70,12 @@ export const directoryModule = createModule({
           pagination,
           sort
         )
+      },
+      countDirectoryChildren: async (id: string): Promise<number> => {
+        return await directoryService.countDirectoryChildren(prismaClient(), id)
+      },
+      getDirectorySize: async (id: string): Promise<number | null> => {
+        return await directoryService.getDirectorySize(prismaClient(), id)
       },
     },
     Mutation: {
