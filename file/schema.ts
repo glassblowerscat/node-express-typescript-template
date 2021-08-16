@@ -11,6 +11,7 @@ export const fileModule = createModule({
       type File implements FileNode {
         id: ID!
         name: String!
+        history: JSONObject
         createdAt: String!
         updatedAt: String
         deletedAt: String
