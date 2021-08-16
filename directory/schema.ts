@@ -12,6 +12,7 @@ export const directoryModule = createModule({
       type Directory implements FileNode {
         parentId: ID
         directories: [Directory]!
+        ancestors: [String]!
         files: [File]!
       }
 
@@ -42,6 +43,7 @@ export const directoryModule = createModule({
 
       extend type Mutation {
         createDirectory(name: String!, parentId: ID!): Directory!
+        moveDirectory(id: ID!, directoryId: ID!): Directory!
         renameDirectory(id: ID!, name: String!): Directory!
         deleteDirectory(id: ID!): Boolean!
       }
@@ -74,6 +76,16 @@ export const directoryModule = createModule({
           prismaClient(),
           name,
           parentId
+        )
+      },
+      moveDirectory: async (
+        id: string,
+        directoryId: string
+      ): Promise<Directory> => {
+        return await directoryService.moveDirectory(
+          prismaClient(),
+          id,
+          directoryId
         )
       },
       renameDirectory: async (id: string, name: string): Promise<Directory> => {

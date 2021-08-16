@@ -11,10 +11,15 @@ export async function createDirectory(
   name: Directory["name"],
   parentId: Directory["parentId"]
 ): Promise<Directory> {
+  const parent = parentId
+    ? await client.directory.findUnique({ where: { id: parentId } })
+    : null
+  const ancestors = parent?.ancestors ?? []
   const directory = await client.directory.create({
     data: {
       name,
       parentId,
+      ancestors: [...ancestors, ...(parentId ?? [])],
     },
   })
   return directory
@@ -142,6 +147,27 @@ export async function getDirectoryContents(
   } else {
     throw new Error("Directory not found")
   }
+}
+
+export async function moveDirectory(
+  client: PrismaClient,
+  id: Directory["id"],
+  directoryId: Directory["id"]
+): Promise<Directory> {
+  const directory = await client.directory.findUnique({
+    where: { id: directoryId },
+  })
+  if (!directory) {
+    throw new Error("Invalid target Directory")
+  }
+  const { ancestors } = directory
+  return await client.directory.update({
+    where: { id },
+    data: {
+      parentId: directoryId,
+      ancestors: [...ancestors, directoryId],
+    },
+  })
 }
 
 export async function renameDirectory(

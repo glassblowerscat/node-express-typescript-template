@@ -14,6 +14,10 @@ export async function createFileRecord(
   file: CreateFileInput
 ): Promise<{ file: File; url: string }> {
   const { name, directoryId, mimeType, size } = file
+  const directory = directoryId
+    ? await client.directory.findUnique({ where: { id: directoryId } })
+    : null
+  const ancestors = directory?.ancestors ?? []
   const data = {
     name,
     directoryId,
@@ -22,6 +26,7 @@ export async function createFileRecord(
         name,
         mimeType,
         size,
+        ancestors: [...ancestors, ...(directoryId ?? [])],
       },
     },
   }
@@ -54,6 +59,27 @@ export async function findFiles(
     },
     orderBy: [{ name: "asc" }],
     include: { versions: { where: { deletedAt: null } } },
+  })
+}
+
+export async function moveFile(
+  client: PrismaClient,
+  id: File["id"],
+  directoryId: File["directoryId"]
+): Promise<File> {
+  const directory = await client.directory.findUnique({
+    where: { id: directoryId },
+  })
+  if (!directory) {
+    throw new Error("Invalid target Directory")
+  }
+  const { ancestors } = directory
+  return await client.file.update({
+    where: { id },
+    data: {
+      directoryId,
+      ancestors: [...ancestors, directoryId],
+    },
   })
 }
 

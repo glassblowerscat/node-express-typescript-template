@@ -10,6 +10,7 @@ export const fileModule = createModule({
     gql`
       type File implements FileNode {
         directoryId: ID!
+        ancestors: [String]!
         versions: [FileVersion]!
       }
 
@@ -34,6 +35,7 @@ export const fileModule = createModule({
 
       type Mutation {
         createFile(input: CreateFileInput!): CreateFileInputResult!
+        moveFile(id: ID!, directoryId: ID!): File!
         renameFile(id: ID!, name: String!): File!
         deleteFile(id: ID!): Boolean!
       }
@@ -53,6 +55,9 @@ export const fileModule = createModule({
         input: fileService.CreateFileInput
       ): Promise<{ file: File; url: string }> => {
         return await fileService.createFileRecord(prismaClient(), input)
+      },
+      moveFile: async (id: string, directoryId: string): Promise<File> => {
+        return await fileService.moveFile(prismaClient(), id, directoryId)
       },
       renameFile: async (id: string, name: string): Promise<File> => {
         return await fileService.renameFile(prismaClient(), id, name)
