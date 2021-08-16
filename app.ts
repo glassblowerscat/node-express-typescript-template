@@ -17,7 +17,6 @@ import { prismaClient } from "./prisma"
 /**
  * TODO list:
  * - JSON transactions
- * - File upload/download endpoints in express
  * - Seed the db with files
  */
 
@@ -75,8 +74,6 @@ app.put("/file", function (req: Request<unknown, unknown, Buffer>, res) {
   const { headers } = req
   const data = {
     ContentType: headers["content-type"] ?? "application/octet-stream",
-    ContentLength: Number(headers["content-length"]),
-    LastModified: new Date(headers["last-modified"] ?? ""),
     Body: req.body,
   }
   void uploadLocalFile(req.originalUrl, data)
