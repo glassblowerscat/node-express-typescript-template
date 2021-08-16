@@ -1,5 +1,6 @@
 import { Directory } from "@prisma/client"
 import { createModule, gql } from "graphql-modules"
+import { Pagination } from "../app"
 import { prismaClient } from "../prisma"
 import * as directoryService from "./service"
 
@@ -56,7 +57,7 @@ export const directoryModule = createModule({
       },
       getDirectoryContents: async (
         id: string,
-        pagination?: directoryService.Pagination,
+        pagination?: Pagination,
         sort?: directoryService.Sort
       ): Promise<Directory | null> => {
         return await directoryService.getDirectoryContents(
