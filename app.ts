@@ -1,13 +1,25 @@
 // eslint-disable-next-line
 require("dotenv").config()
 import { Directory, File } from "@prisma/client"
-import express from "express"
+import express, { Request } from "express"
 import { graphqlHTTP } from "express-graphql"
 import { createApplication, createModule, gql } from "graphql-modules"
-import { prismaClient } from "./prisma"
 import { directoryModule, findDirectories } from "./directory"
-import { fileModule, findFiles } from "./file"
+import {
+  downloadLocalFile,
+  fileModule,
+  findFiles,
+  uploadLocalFile,
+} from "./file"
 import { fileVersionModule } from "./fileVersion"
+import { prismaClient } from "./prisma"
+
+/**
+ * TODO list:
+ * - JSON transactions
+ * - File upload/download endpoints in express
+ * - Seed the db with files
+ */
 
 export interface Pagination {
   pageLength: number
@@ -48,6 +60,32 @@ const api = createApplication({
 })
 
 const app = express()
+
+app.get("/file", function (req, res) {
+  void downloadLocalFile(req.originalUrl)
+    .then((file) => {
+      res.status(200).send(file)
+    })
+    .catch((error) => {
+      res.status(400).send(error)
+    })
+})
+
+app.put("/file", function (req: Request<unknown, unknown, Buffer>, res) {
+  const { headers } = req
+  const data = {
+    ContentType: headers["content-type"] ?? "application/octet-stream",
+    ContentLength: Number(headers["content-length"]),
+    LastModified: new Date(headers["last-modified"] ?? ""),
+    Body: req.body,
+  }
+  void uploadLocalFile(req.originalUrl, data)
+    .then(() => res.status(200).send(true))
+    .catch((error) => {
+      res.status(400).send(error)
+    })
+})
+
 app.use(
   "/graphql",
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -58,4 +96,4 @@ app.use(
   })
 )
 
-app.listen(4000)
+app.listen(process.env.LOCAL_PORT ?? 4000)
