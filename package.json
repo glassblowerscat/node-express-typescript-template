@@ -38,6 +38,7 @@
     "express-graphql": "^0.12.0",
     "graphql": "^15.5.1",
     "graphql-modules": "^1.4.4",
+    "graphql-type-json": "^0.3.2",
     "graphql-upload": "^12.0.0",
     "luxon": "^2.0.1",
     "prettier": "^2.3.2"
