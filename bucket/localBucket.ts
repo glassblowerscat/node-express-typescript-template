@@ -3,9 +3,8 @@ import { DateTime } from "luxon"
 import { dirname, join } from "path"
 import { FakeAwsFile, FileBucket, SIGNED_URL_EXPIRES } from "./bucket"
 
-// TODO: Actually set these
-const rootDir = ""
-const baseUrl = ""
+const rootDir = ".files"
+const baseUrl = `http://localhost:${process.env.LOCAL_PORT ?? 4000}/file`
 
 export function getLocalBucket(): FileBucket {
   return {
