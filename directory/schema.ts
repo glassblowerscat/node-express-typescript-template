@@ -10,10 +10,17 @@ export const directoryModule = createModule({
   typeDefs: [
     gql`
       type Directory implements FileNode {
+        id: ID!
+        name: String!
+        createdAt: String!
+        updatedAt: String
+        deletedAt: String
         parentId: ID
         directories: [Directory]!
         ancestors: [String]!
         files: [File]!
+        children: Int!
+        size: Int
       }
 
       input SortInput {
@@ -52,6 +59,14 @@ export const directoryModule = createModule({
     `,
   ],
   resolvers: {
+    Directory: {
+      children: async ({ id }: { id: string }): Promise<number> => {
+        return await directoryService.countDirectoryChildren(prismaClient(), id)
+      },
+      size: async ({ id }: { id: string }): Promise<number | null> => {
+        return await directoryService.getDirectorySize(prismaClient(), id)
+      },
+    },
     Query: {
       allDirectories: async () => {
         return await prismaClient().directory.findMany()
@@ -70,12 +85,6 @@ export const directoryModule = createModule({
           pagination,
           sort
         )
-      },
-      countDirectoryChildren: async (id: string): Promise<number> => {
-        return await directoryService.countDirectoryChildren(prismaClient(), id)
-      },
-      getDirectorySize: async (id: string): Promise<number | null> => {
-        return await directoryService.getDirectorySize(prismaClient(), id)
       },
     },
     Mutation: {

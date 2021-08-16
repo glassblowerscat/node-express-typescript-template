@@ -9,6 +9,11 @@ export const fileVersionModule = createModule({
   typeDefs: [
     gql`
       type FileVersion implements FileNode {
+        id: ID!
+        name: String!
+        createdAt: String!
+        updatedAt: String
+        deletedAt: String
         fileId: ID!
         mimeType: String!
         size: Int!
