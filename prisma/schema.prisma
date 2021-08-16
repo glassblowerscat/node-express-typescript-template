@@ -18,6 +18,7 @@ model File {
   directoryId String
   ancestors   String[]
   versions    FileVersion[]
+  history     Json?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   deletedAt   DateTime?
