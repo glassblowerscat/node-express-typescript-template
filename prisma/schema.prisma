@@ -16,6 +16,7 @@ model File {
   name        String
   directory   Directory     @relation(fields: [directoryId], references: [id], onDelete: Cascade)
   directoryId String
+  ancestors   String[]
   versions    FileVersion[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -43,6 +44,7 @@ model Directory {
   name        String
   parent      Directory?  @relation(fields: [parentId], references: [id], onDelete: Cascade)
   parentId    String?
+  ancestors   String[]
   directories Directory[] @relation("DirectoryToDirectory")
   files       File[]
   createdAt   DateTime    @default(now())
