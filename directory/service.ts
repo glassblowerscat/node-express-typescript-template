@@ -101,14 +101,22 @@ export async function getDirectoryContents(
   if (directory) {
     const { field, direction } = sort ?? {}
     const { pageLength = 20, page = 1 } = pagination ?? {}
-    const files = await client.file.findMany({
-      where: { directoryId: id, deletedAt: null },
-      orderBy: { name: "asc" },
-    })
-    const directories = await client.directory.findMany({
-      where: { parentId: id, deletedAt: null },
-      orderBy: { name: "asc" },
-    })
+    const files = await client.directory
+      .findUnique({
+        where: { id },
+      })
+      .files({
+        where: { deletedAt: null },
+        orderBy: { name: "asc" },
+      })
+    const directories = await client.directory
+      .findUnique({
+        where: { id },
+      })
+      .directories({
+        where: { deletedAt: null },
+        orderBy: { name: "asc" },
+      })
     const contents =
       !field || field === "name"
         ? [...files, ...directories].sort((a, b) => {
