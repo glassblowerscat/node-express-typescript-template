@@ -225,16 +225,19 @@ export async function moveDirectory(
   const oldAncestors = thisDirectory.ancestors
   const { ancestors } = destinationDirectory
 
-  const ancestorUpdateData = {
-    ancestors: [...ancestors, directoryId, id],
-  }
+  const childFilesOfThisDirectory = await client.file.findMany({
+    where: {
+      directoryId: thisDirectory.parentId ?? "",
+    },
+    select: { id: true, ancestors: true, history: true },
+  })
   const descendentFilesOfThisDirectory = await client.file.findMany({
     where: {
       ancestors: {
         has: thisDirectory.parentId ?? "",
       },
     },
-    select: { id: true, ancestors: true },
+    select: { id: true, ancestors: true, history: true },
   })
   const descendentDirectoriesOfThisDirectory = await client.directory.findMany({
     where: {
@@ -245,20 +248,48 @@ export async function moveDirectory(
     select: { id: true, ancestors: true },
   })
   const descendentAncestorUpdates = [
-    ...descendentFilesOfThisDirectory.map((file) => {
+    ...childFilesOfThisDirectory.map((file) => {
+      const updatedAncestors = [...ancestors, directoryId, id]
       return client.file.update({
         where: {
           id: file.id,
         },
         data: {
-          ancestors: [
-            ...new Set([
-              ...file.ancestors.filter((a) => !oldAncestors.includes(a)),
-              ...ancestors,
-              directoryId,
-              id,
-            ]),
-          ],
+          ancestors: updatedAncestors,
+          history: {
+            ...(file.history &&
+            typeof file.history === "object" &&
+            Array.isArray(file.history)
+              ? file.history
+              : []),
+            ancestors: JSON.stringify(updatedAncestors),
+          },
+        },
+      })
+    }),
+    ...descendentFilesOfThisDirectory.map((file) => {
+      const updatedAncestors = [
+        ...new Set([
+          ...file.ancestors.filter((a) => !oldAncestors.includes(a)),
+          ...ancestors,
+          directoryId,
+          id,
+        ]),
+      ]
+      return client.file.update({
+        where: {
+          id: file.id,
+        },
+        data: {
+          ancestors: updatedAncestors,
+          history: {
+            ...(file.history &&
+            typeof file.history === "object" &&
+            Array.isArray(file.history)
+              ? file.history
+              : []),
+            ancestors: JSON.stringify(updatedAncestors),
+          },
         },
       })
     }),
@@ -280,20 +311,19 @@ export async function moveDirectory(
       })
     }),
   ]
+
   const ancestorUpdates = [
-    client.file.updateMany({
-      where: {
-        directoryId: thisDirectory.parentId ?? "",
-      },
-      data: ancestorUpdateData,
-    }),
+    ...descendentAncestorUpdates,
+    // No history to update, so it can just have
+    // new ancestors passed.
     client.directory.updateMany({
       where: {
         parentId: thisDirectory.parentId ?? "",
       },
-      data: ancestorUpdateData,
+      data: {
+        ancestors: [...ancestors, directoryId, id],
+      },
     }),
-    ...descendentAncestorUpdates,
   ]
 
   await client.$transaction([
