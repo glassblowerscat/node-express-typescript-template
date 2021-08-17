@@ -9,6 +9,34 @@ const fileInputFields = Prisma.validator<Prisma.FileArgs>()({
 export type CreateFileInput = Prisma.FileGetPayload<typeof fileInputFields> &
   CreateFileVersionInput
 
+export async function updateFileHistory(
+  client: PrismaClient,
+  id: File["id"],
+  entry: Record<string, string | number | boolean>
+): Promise<Prisma.JsonArray> {
+  const file = await client.file.findUnique({
+    where: { id },
+    select: { history: true },
+  })
+  if (!file) {
+    throw new Error("File not found")
+  }
+  const history =
+    file.history &&
+    typeof file.history === "object" &&
+    Array.isArray(file.history)
+      ? file.history
+      : []
+  const updatedHistory = [
+    ...history,
+    {
+      ...entry,
+      date: new Date().toString(),
+    },
+  ]
+  return updatedHistory
+}
+
 export async function createFileRecord(
   client: PrismaClient,
   file: CreateFileInput
@@ -21,6 +49,15 @@ export async function createFileRecord(
   const data = {
     name,
     directoryId,
+    history: [
+      {
+        action: "created",
+        name,
+        mimeType,
+        size,
+        ...(directory ? { directory: directory.name } : {}),
+      },
+    ],
     versions: {
       create: {
         name,
@@ -73,12 +110,16 @@ export async function moveFile(
   if (!directory) {
     throw new Error("Invalid target Directory")
   }
+  const updatedHistory = await updateFileHistory(client, id, {
+    directory: directory.id,
+  })
   const { ancestors } = directory
   return await client.file.update({
     where: { id },
     data: {
       directoryId,
       ancestors: [...ancestors, directoryId],
+      history: updatedHistory,
     },
   })
 }
@@ -88,9 +129,10 @@ export async function renameFile(
   id: File["id"],
   name: File["name"]
 ): Promise<File> {
+  const updatedHistory = await updateFileHistory(client, id, { name })
   const updatedFile = await client.file.update({
     where: { id },
-    data: { name },
+    data: { name, history: updatedHistory },
   })
   return updatedFile
 }
@@ -99,7 +141,11 @@ export async function deleteFile(
   client: PrismaClient,
   id: File["id"]
 ): Promise<boolean> {
-  await client.file.delete({ where: { id } })
+  const updatedHistory = await updateFileHistory(client, id, { deleted: true })
+  await client.$transaction([
+    client.file.update({ where: { id }, data: { history: updatedHistory } }),
+    client.file.delete({ where: { id } }),
+  ])
   return true
 }
 
