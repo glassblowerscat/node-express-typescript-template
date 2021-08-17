@@ -207,21 +207,107 @@ export async function moveDirectory(
   client: PrismaClient,
   id: Directory["id"],
   directoryId: Directory["id"]
-): Promise<Directory> {
-  const directory = await client.directory.findUnique({
+): Promise<Directory | null> {
+  const thisDirectory = await client.directory.findUnique({ where: { id } })
+
+  if (!thisDirectory) {
+    throw new Error("Invalid Directory")
+  }
+
+  const destinationDirectory = await client.directory.findUnique({
     where: { id: directoryId },
   })
-  if (!directory) {
+
+  if (!destinationDirectory) {
     throw new Error("Invalid target Directory")
   }
-  const { ancestors } = directory
-  return await client.directory.update({
-    where: { id },
-    data: {
-      parentId: directoryId,
-      ancestors: [...ancestors, directoryId],
+
+  const oldAncestors = thisDirectory.ancestors
+  const { ancestors } = destinationDirectory
+
+  const ancestorUpdateData = {
+    ancestors: [...ancestors, directoryId, id],
+  }
+  const descendentFilesOfThisDirectory = await client.file.findMany({
+    where: {
+      ancestors: {
+        has: thisDirectory.parentId ?? "",
+      },
     },
+    select: { id: true, ancestors: true },
   })
+  const descendentDirectoriesOfThisDirectory = await client.directory.findMany({
+    where: {
+      ancestors: {
+        has: thisDirectory.parentId ?? "",
+      },
+    },
+    select: { id: true, ancestors: true },
+  })
+  const descendentAncestorUpdates = [
+    ...descendentFilesOfThisDirectory.map((file) => {
+      return client.file.update({
+        where: {
+          id: file.id,
+        },
+        data: {
+          ancestors: [
+            ...new Set([
+              ...file.ancestors.filter((a) => !oldAncestors.includes(a)),
+              ...ancestors,
+              directoryId,
+              id,
+            ]),
+          ],
+        },
+      })
+    }),
+    ...descendentDirectoriesOfThisDirectory.map((directory) => {
+      return client.directory.update({
+        where: {
+          id: directory.id,
+        },
+        data: {
+          ancestors: [
+            ...new Set([
+              ...directory.ancestors.filter((a) => !oldAncestors.includes(a)),
+              ...ancestors,
+              directoryId,
+              id,
+            ]),
+          ],
+        },
+      })
+    }),
+  ]
+  const ancestorUpdates = [
+    client.file.updateMany({
+      where: {
+        directoryId: thisDirectory.parentId ?? "",
+      },
+      data: ancestorUpdateData,
+    }),
+    client.directory.updateMany({
+      where: {
+        parentId: thisDirectory.parentId ?? "",
+      },
+      data: ancestorUpdateData,
+    }),
+    ...descendentAncestorUpdates,
+  ]
+
+  await client.$transaction([
+    ...ancestorUpdates,
+    client.directory.update({
+      where: { id },
+      data: {
+        parentId: directoryId,
+        ancestors: [...ancestors, directoryId],
+      },
+    }),
+  ])
+
+  return await client.directory.findUnique({ where: { id } })
 }
 
 export async function renameDirectory(
