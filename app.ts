@@ -15,12 +15,6 @@ import {
 import { fileVersionModule } from "./fileVersion"
 import { prismaClient } from "./prisma"
 
-/**
- * TODO list:
- * - JSON transactions
- * - Seed the db with files
- */
-
 export interface Pagination {
   pageLength: number
   page: number
