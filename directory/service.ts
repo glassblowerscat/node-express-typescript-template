@@ -95,67 +95,66 @@ export async function getDirectoryContents(
   const directory = await client.directory.findUnique({
     where: { id },
   })
+  if (!directory) {
+    throw new Error("Directory not found")
+  }
   function isFile(item: File | Directory): item is File {
     return Object.prototype.hasOwnProperty.call(item, "directoryId")
   }
-  if (directory) {
-    const { field, direction } = sort ?? {}
-    const { pageLength = 20, page = 1 } = pagination ?? {}
-    const [files, directories] = await client.$transaction([
-      client.directory
-        .findUnique({
-          where: { id },
+  const { field, direction } = sort ?? {}
+  const { pageLength = 20, page = 1 } = pagination ?? {}
+  const [files, directories] = await client.$transaction([
+    client.directory
+      .findUnique({
+        where: { id },
+      })
+      .files({
+        where: { deletedAt: null },
+        orderBy: { name: "asc" },
+      }),
+    client.directory
+      .findUnique({
+        where: { id },
+      })
+      .directories({
+        where: { deletedAt: null },
+        orderBy: { name: "asc" },
+      }),
+  ])
+  const contents =
+    !field || field === "name"
+      ? [...files, ...directories].sort((a, b) => {
+          return a.name > b.name ? 1 : a.name < b.name ? -1 : 0
         })
-        .files({
-          where: { deletedAt: null },
-          orderBy: { name: "asc" },
-        }),
-      client.directory
-        .findUnique({
-          where: { id },
-        })
-        .directories({
-          where: { deletedAt: null },
-          orderBy: { name: "asc" },
-        }),
-    ])
-    const contents =
-      !field || field === "name"
-        ? [...files, ...directories].sort((a, b) => {
+      : // If we're sorting by anything other than name,
+        // we'll put all directories first.
+        [
+          ...directories.sort((a, b) => {
             return a.name > b.name ? 1 : a.name < b.name ? -1 : 0
-          })
-        : // If we're sorting by anything other than name,
-          // we'll put all directories first.
-          [
-            ...directories.sort((a, b) => {
-              return a.name > b.name ? 1 : a.name < b.name ? -1 : 0
-            }),
-            ...files.sort((a, b) => {
-              return a[field] > b[field]
-                ? direction === "ASC"
-                  ? 1
-                  : -1
-                : a[field] < b[field]
-                ? direction === "ASC"
-                  ? -1
-                  : 1
-                : 0
-            }),
-          ]
-    const paginatedContents = contents.slice(page - 1, pageLength)
-    const paginatedFiles = paginatedContents.filter((item) =>
-      isFile(item)
-    ) as File[]
-    const paginatedDirectories = paginatedContents.filter(
-      (item) => !isFile(item)
-    ) as Directory[]
-    return {
-      ...directory,
-      files: paginatedFiles,
-      directories: paginatedDirectories,
-    }
-  } else {
-    throw new Error("Directory not found")
+          }),
+          ...files.sort((a, b) => {
+            return a[field] > b[field]
+              ? direction === "ASC"
+                ? 1
+                : -1
+              : a[field] < b[field]
+              ? direction === "ASC"
+                ? -1
+                : 1
+              : 0
+          }),
+        ]
+  const paginatedContents = contents.slice(page - 1, pageLength)
+  const paginatedFiles = paginatedContents.filter((item) =>
+    isFile(item)
+  ) as File[]
+  const paginatedDirectories = paginatedContents.filter(
+    (item) => !isFile(item)
+  ) as Directory[]
+  return {
+    ...directory,
+    files: paginatedFiles,
+    directories: paginatedDirectories,
   }
 }
 
