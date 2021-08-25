@@ -43,11 +43,14 @@ async function deleteObject(key: string) {
   await fs.unlink(getPath(key) + ".info")
 }
 
-async function readFile(key: string) {
+export async function readFile(key: string): Promise<Buffer> {
   return await fs.readFile(getPath(key))
 }
 
-async function saveFile(key: string, file: FakeAwsFile) {
+export async function saveFile(
+  key: string,
+  file: FakeAwsFile
+): Promise<string> {
   const { Body, ...info } = file
   await writeFile(key, Body)
   await writeFile(
@@ -71,7 +74,7 @@ async function writeFile(key: string, data: Parameters<typeof fsWrite>[1]) {
   await fs.writeFile(getPath(key), data)
 }
 
-function getPath(key: string) {
+function getPath(key: string): string {
   return join(rootDir, key)
 }
 
