@@ -206,7 +206,7 @@ export async function moveDirectory(
   client: PrismaClient,
   id: Directory["id"],
   directoryId: Directory["id"]
-): Promise<Directory | null> {
+): Promise<Directory> {
   const thisDirectory = await client.directory.findUnique({ where: { id } })
 
   if (!thisDirectory) {
@@ -336,7 +336,8 @@ export async function moveDirectory(
     }),
   ])
 
-  return await client.directory.findUnique({ where: { id } })
+  // We already know this directory exists; let's just assert
+  return (await client.directory.findUnique({ where: { id } })) as Directory
 }
 
 export async function renameDirectory(
