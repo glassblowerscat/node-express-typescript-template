@@ -4,7 +4,7 @@ import { getBucket } from "../bucket"
 import { updateFileHistory } from "../file"
 
 const fileVersionInputFields = Prisma.validator<Prisma.FileVersionArgs>()({
-  select: { fileId: true, name: true, mimeType: true, size: true },
+  select: { fileId: true, name: true, key: true, mimeType: true, size: true },
 })
 
 export type CreateFileVersionInput = Prisma.FileVersionGetPayload<

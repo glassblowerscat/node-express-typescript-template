@@ -1,13 +1,14 @@
 import { File, Prisma, PrismaClient } from "@prisma/client"
 import { download, FakeAwsFile, getBucket, upload } from "../bucket"
 import { CreateFileVersionInput } from "../fileVersion"
+import { generateId } from "../util/generators"
 
 const fileInputFields = Prisma.validator<Prisma.FileArgs>()({
-  select: { name: true, directoryId: true, versions: true },
+  select: { name: true, directoryId: true },
 })
 
 export type CreateFileInput = Prisma.FileGetPayload<typeof fileInputFields> &
-  CreateFileVersionInput
+  Omit<CreateFileVersionInput, "fileId">
 
 export async function updateFileHistory(
   client: PrismaClient,
@@ -61,6 +62,7 @@ export async function createFileRecord(
     versions: {
       create: {
         name,
+        key: await generateId(),
         mimeType,
         size,
         ancestors: [...ancestors, ...(directoryId ?? [])],
