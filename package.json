@@ -4,6 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "seed": "prisma db seed --preview-feature",
+    "reset-db": "prisma migrate reset",
     "dev": "NODE_ENV=development ts-node-dev app.ts",
     "start": "tsc --build && node dist/app.js",
     "start:clean": "rm -rf dist && tsc --build && node dist/app.js",
