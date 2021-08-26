@@ -22,7 +22,7 @@ export async function createDirectory(
     data: {
       name,
       parentId,
-      ancestors: [...ancestors, ...(parentId ?? [])],
+      ancestors: [...ancestors, ...(parentId ? [parentId] : [])],
     },
   })
   return directory
