@@ -11,6 +11,9 @@ export async function createDirectory(
   name: Directory["name"],
   parentId: Directory["parentId"]
 ): Promise<Directory> {
+  if (name === "root") {
+    throw new Error("Directory name 'root' is reserved")
+  }
   const parent = parentId
     ? await client.directory.findUnique({ where: { id: parentId } })
     : null
@@ -345,6 +348,9 @@ export async function renameDirectory(
   id: Directory["id"],
   name: Directory["name"]
 ): Promise<Directory> {
+  if (name === "root") {
+    throw new Error("Directory name 'root' is reserved")
+  }
   return await client.directory.update({
     where: { id },
     data: {
