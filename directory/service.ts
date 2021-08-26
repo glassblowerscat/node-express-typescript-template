@@ -147,7 +147,10 @@ export async function getDirectoryContents(
               : 0
           }),
         ]
-  const paginatedContents = contents.slice(page - 1, pageLength)
+  const paginatedContents = contents.slice(
+    (page - 1) * pageLength,
+    (page - 1) * pageLength + pageLength
+  )
   const paginatedFiles = paginatedContents.filter((item) =>
     isFile(item)
   ) as File[]
