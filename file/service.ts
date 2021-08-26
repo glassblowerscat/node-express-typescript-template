@@ -50,6 +50,7 @@ export async function createFileRecord(
   const data = {
     name,
     directoryId,
+    ancestors: [...ancestors, ...([directoryId] ?? [])],
     history: [
       {
         action: "created",
@@ -65,7 +66,6 @@ export async function createFileRecord(
         key: await generateId(),
         mimeType,
         size,
-        ancestors: [...ancestors, ...(directoryId ?? [])],
       },
     },
   }
