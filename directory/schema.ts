@@ -46,8 +46,6 @@ export const directoryModule = createModule({
           pagination: PaginationInput
           sort: SortInput
         ): Directory
-        countDirectoryChildren(id: ID!): Int!
-        getDirectorySize(id: ID!): Int
       }
 
       extend type Mutation {
