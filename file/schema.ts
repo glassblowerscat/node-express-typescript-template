@@ -50,7 +50,9 @@ export const fileModule = createModule({
   resolvers: {
     Query: {
       allFiles: async (): Promise<File[]> => {
-        return await prismaClient().file.findMany()
+        return await prismaClient().file.findMany({
+          include: { versions: true },
+        })
       },
       getFile: async (id: string): Promise<File | null> => {
         return await fileService.getFile(prismaClient(), id)

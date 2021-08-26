@@ -69,7 +69,10 @@ export async function createFileRecord(
       },
     },
   }
-  const fileData = await client.file.create({ data })
+  const fileData = await client.file.create({
+    data,
+    include: { versions: true },
+  })
   const bucket = getBucket()
   const url = await bucket.getSignedUrl("putObject", name)
   return { file: fileData, url }
@@ -123,6 +126,7 @@ export async function moveFile(
       ancestors: [...ancestors, directoryId],
       history: updatedHistory,
     },
+    include: { versions: true },
   })
 }
 
@@ -135,6 +139,7 @@ export async function renameFile(
   const updatedFile = await client.file.update({
     where: { id },
     data: { name, history: updatedHistory },
+    include: { versions: true },
   })
   return updatedFile
 }
