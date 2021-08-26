@@ -71,13 +71,19 @@ export const directoryModule = createModule({
       allDirectories: async () => {
         return await prismaClient().directory.findMany()
       },
-      getDirectory: async (id: string): Promise<Directory | null> => {
+      getDirectory: async (
+        _: unknown,
+        { id }: { id: string }
+      ): Promise<Directory | null> => {
         return await directoryService.getDirectory(prismaClient(), id)
       },
       getDirectoryContents: async (
-        id: string,
-        pagination?: Pagination,
-        sort?: directoryService.Sort
+        _: unknown,
+        {
+          id,
+          pagination,
+          sort,
+        }: { id: string; pagination?: Pagination; sort?: directoryService.Sort }
       ): Promise<Directory | null> => {
         return await directoryService.getDirectoryContents(
           prismaClient(),
@@ -88,7 +94,10 @@ export const directoryModule = createModule({
       },
     },
     Mutation: {
-      createDirectory: async (name: string, parentId: string) => {
+      createDirectory: async (
+        _: unknown,
+        { name, parentId }: { name: string; parentId: string }
+      ) => {
         return await directoryService.createDirectory(
           prismaClient(),
           name,
@@ -96,8 +105,14 @@ export const directoryModule = createModule({
         )
       },
       moveDirectory: async (
-        id: string,
-        directoryId: string
+        _: unknown,
+        {
+          id,
+          directoryId,
+        }: {
+          id: string
+          directoryId: string
+        }
       ): Promise<Directory> => {
         return await directoryService.moveDirectory(
           prismaClient(),
@@ -105,10 +120,16 @@ export const directoryModule = createModule({
           directoryId
         )
       },
-      renameDirectory: async (id: string, name: string): Promise<Directory> => {
+      renameDirectory: async (
+        _: unknown,
+        { id, name }: { id: string; name: string }
+      ): Promise<Directory> => {
         return await directoryService.renameDirectory(prismaClient(), id, name)
       },
-      deleteDirectory: async (id: string): Promise<boolean> => {
+      deleteDirectory: async (
+        _: unknown,
+        { id }: { id: string }
+      ): Promise<boolean> => {
         return await directoryService.deleteDirectory(prismaClient(), id)
       },
     },

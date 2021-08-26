@@ -43,17 +43,29 @@ export const fileVersionModule = createModule({
       allFileVersions: async (): Promise<FileVersion[]> => {
         return await prismaClient().fileVersion.findMany()
       },
-      getFileVersion: async (id: string): Promise<FileVersion | null> => {
+      getFileVersion: async (
+        _: unknown,
+        { id }: { id: string }
+      ): Promise<FileVersion | null> => {
         return await fileVersionService.getFileVersion(prismaClient(), id)
       },
-      getFileVersions: async (fileId: string): Promise<FileVersion[]> => {
+      getFileVersions: async (
+        _: unknown,
+        { fileId }: { fileId: string }
+      ): Promise<FileVersion[]> => {
         return await fileVersionService.getFileVersions(prismaClient(), fileId)
       },
     },
     Mutation: {
       renameFileVersion: async (
-        id: string,
-        name: string
+        _: unknown,
+        {
+          id,
+          name,
+        }: {
+          id: string
+          name: string
+        }
       ): Promise<FileVersion> => {
         return await fileVersionService.renameFileVersion(
           prismaClient(),
@@ -61,7 +73,10 @@ export const fileVersionModule = createModule({
           name
         )
       },
-      deleteFileVersion: async (id: string): Promise<boolean> => {
+      deleteFileVersion: async (
+        _: unknown,
+        { id }: { id: string }
+      ): Promise<boolean> => {
         return await fileVersionService.deleteFileVersion(prismaClient(), id)
       },
     },

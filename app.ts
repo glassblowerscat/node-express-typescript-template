@@ -35,7 +35,7 @@ const mainModule = createModule({
         deletedAt: String
       }
 
-      extend type Query {
+      type Query {
         searchFiles(query: String!): [FileNode]
       }
     `,

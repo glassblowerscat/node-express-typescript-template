@@ -34,7 +34,7 @@ export const fileModule = createModule({
         url: String!
       }
 
-      type Query {
+      extend type Query {
         allFiles: [File]!
         getFile(id: ID!): File
       }
@@ -54,23 +54,37 @@ export const fileModule = createModule({
           include: { versions: true },
         })
       },
-      getFile: async (id: string): Promise<File | null> => {
+      getFile: async (
+        _: unknown,
+        { id }: { id: string }
+      ): Promise<File | null> => {
+        console.log("file: schema.ts ~ line 58 ~ id", id)
         return await fileService.getFile(prismaClient(), id)
       },
     },
     Mutation: {
       createFile: async (
-        input: fileService.CreateFileInput
+        _: unknown,
+        { input }: { input: fileService.CreateFileInput }
       ): Promise<{ file: File; url: string }> => {
         return await fileService.createFileRecord(prismaClient(), input)
       },
-      moveFile: async (id: string, directoryId: string): Promise<File> => {
+      moveFile: async (
+        _: unknown,
+        { id, directoryId }: { id: string; directoryId: string }
+      ): Promise<File> => {
         return await fileService.moveFile(prismaClient(), id, directoryId)
       },
-      renameFile: async (id: string, name: string): Promise<File> => {
+      renameFile: async (
+        _: unknown,
+        { id, name }: { id: string; name: string }
+      ): Promise<File> => {
         return await fileService.renameFile(prismaClient(), id, name)
       },
-      deleteFile: async (id: string): Promise<boolean> => {
+      deleteFile: async (
+        _: unknown,
+        { id }: { id: string }
+      ): Promise<boolean> => {
         return await fileService.deleteFile(prismaClient(), id)
       },
     },
