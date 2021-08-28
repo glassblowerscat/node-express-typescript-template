@@ -29,7 +29,7 @@ export const fileModule = createModule({
         size: Int!
       }
 
-      type CreateFileInputResult {
+      type CreateFileResult {
         file: File!
         url: String!
       }
@@ -40,7 +40,7 @@ export const fileModule = createModule({
       }
 
       type Mutation {
-        createFile(input: CreateFileInput!): CreateFileInputResult!
+        createFile(input: CreateFileInput!): CreateFileResult!
         moveFile(id: ID!, directoryId: ID!): File!
         renameFile(id: ID!, name: String!): File!
         deleteFile(id: ID!): Boolean!
