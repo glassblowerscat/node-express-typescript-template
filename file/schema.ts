@@ -58,7 +58,6 @@ export const fileModule = createModule({
         _: unknown,
         { id }: { id: string }
       ): Promise<File | null> => {
-        console.log("file: schema.ts ~ line 58 ~ id", id)
         return await fileService.getFile(prismaClient(), id)
       },
     },
