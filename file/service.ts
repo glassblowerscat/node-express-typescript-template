@@ -59,7 +59,7 @@ export async function createFileRecord(
         size,
         ...(directory ? { directory: directory.name } : {}),
       },
-    ],
+    ] as Prisma.JsonArray,
     versions: {
       create: {
         name,
