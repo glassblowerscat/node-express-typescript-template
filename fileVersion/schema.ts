@@ -26,6 +26,11 @@ export const fileVersionModule = createModule({
         size: Int!
       }
 
+      type CreateFileVersionResult {
+        file: File!
+        url: String!
+      }
+
       extend type Query {
         allFileVersions: [FileVersion]!
         getFileVersion(id: ID!): FileVersion
@@ -33,6 +38,9 @@ export const fileVersionModule = createModule({
       }
 
       extend type Mutation {
+        createFileVersion(
+          input: CreateFileVersionInput!
+        ): CreateFileVersionResult!
         renameFileVersion(id: ID!, name: String!): FileVersion!
         deleteFileVersion(id: ID!): Boolean!
       }
@@ -57,6 +65,15 @@ export const fileVersionModule = createModule({
       },
     },
     Mutation: {
+      createFileVersion: async (
+        _: unknown,
+        { input }: { input: fileVersionService.CreateFileVersionInput }
+      ): Promise<FileVersion & { url: string }> => {
+        return await fileVersionService.createFileVersionRecord(
+          prismaClient(),
+          input
+        )
+      },
       renameFileVersion: async (
         _: unknown,
         {
