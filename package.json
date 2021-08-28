@@ -6,7 +6,7 @@
   "scripts": {
     "db:seed": "NODE_ENV=development npx prisma db seed --preview-feature",
     "db:reset": "rm -rf ./.files && NODE_ENV=development npx prisma migrate reset",
-    "dev": "NODE_ENV=development ts-node-dev app.ts",
+    "dev": "NODE_ENV=development nodemon app.ts",
     "start": "tsc --build && node dist/app.js",
     "start:clean": "rm -rf dist && tsc --build && node dist/app.js",
     "format": "prettier . --write",
@@ -23,8 +23,8 @@
     "@types/luxon": "^1.27.1",
     "@types/node": "^16.4.13",
     "dotenv": "^10.0.0",
+    "nodemon": "^2.0.12",
     "ts-node": "^10.1.0",
-    "ts-node-dev": "^1.1.8",
     "typescript": "^4.3.5"
   },
   "dependencies": {
