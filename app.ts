@@ -4,7 +4,7 @@ import { Directory, File } from "@prisma/client"
 import express, { Request } from "express"
 import { graphqlHTTP } from "express-graphql"
 import { createApplication, createModule, gql } from "graphql-modules"
-import { GraphQLJSONObject } from "graphql-type-json"
+import { GraphQLJSON } from "graphql-type-json"
 import { directoryModule, findDirectories } from "./directory"
 import {
   downloadLocalFile,
@@ -25,7 +25,7 @@ const mainModule = createModule({
   dirname: __dirname,
   typeDefs: [
     gql`
-      scalar JSONObject
+      scalar JSON
 
       interface FileNode {
         id: ID!
@@ -41,7 +41,7 @@ const mainModule = createModule({
     `,
   ],
   resolvers: {
-    JSONObject: GraphQLJSONObject,
+    JSON: GraphQLJSON,
     Query: {
       searchFiles: async (query: string): Promise<Array<Directory | File>> => {
         const directories = (await findDirectories(prismaClient(), query)) ?? []
