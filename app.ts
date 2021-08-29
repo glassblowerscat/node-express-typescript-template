@@ -63,7 +63,8 @@ app.get("/file", function (req, res) {
     `${req.protocol}://${req.get("host") ?? ""}${req.originalUrl}`
   )
     .then((file) => {
-      res.status(200).send(file)
+      res.setHeader("Content-Type", file.ContentType)
+      res.status(200).send(file.Body)
     })
     .catch((error) => {
       res.status(400).send(error)
