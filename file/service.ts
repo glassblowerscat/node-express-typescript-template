@@ -8,7 +8,7 @@ const fileInputFields = Prisma.validator<Prisma.FileArgs>()({
 })
 
 export type CreateFileInput = Prisma.FileGetPayload<typeof fileInputFields> &
-  Omit<CreateFileVersionInput, "fileId">
+  Omit<CreateFileVersionInput, "fileId" | "key"> & { key?: string }
 
 export async function updateFileHistory(
   client: PrismaClient,
@@ -42,7 +42,7 @@ export async function createFileRecord(
   client: PrismaClient,
   file: CreateFileInput
 ): Promise<{ file: File; url: string }> {
-  const { name, directoryId, mimeType, size } = file
+  const { name, directoryId, mimeType, size, key } = file
   const directory = directoryId
     ? await client.directory.findUnique({ where: { id: directoryId } })
     : null
@@ -63,7 +63,7 @@ export async function createFileRecord(
     versions: {
       create: {
         name,
-        key: await generateId(),
+        key: key ?? (await generateId()),
         mimeType,
         size,
       },
