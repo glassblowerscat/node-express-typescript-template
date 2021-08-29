@@ -17,6 +17,7 @@ export const fileVersionModule = createModule({
         fileId: ID!
         mimeType: String!
         size: Int!
+        key: String!
       }
 
       input CreateFileVersionInput {
@@ -35,6 +36,8 @@ export const fileVersionModule = createModule({
         allFileVersions: [FileVersion]!
         getFileVersion(id: ID!): FileVersion
         getFileVersions(fileId: ID!): [FileVersion]!
+        requestFileDownload(key: String!): String!
+        requestFileUpload(key: String!): String!
       }
 
       extend type Mutation {
@@ -62,6 +65,18 @@ export const fileVersionModule = createModule({
         { fileId }: { fileId: string }
       ): Promise<FileVersion[]> => {
         return await fileVersionService.getFileVersions(prismaClient(), fileId)
+      },
+      requestFileDownload: async (
+        _: unknown,
+        { key }: { key: string }
+      ): Promise<string> => {
+        return await fileVersionService.requestFileDownload(key)
+      },
+      requestFileUpload: async (
+        _: unknown,
+        { key }: { key: string }
+      ): Promise<string> => {
+        return await fileVersionService.requestFileUpload(key)
       },
     },
     Mutation: {

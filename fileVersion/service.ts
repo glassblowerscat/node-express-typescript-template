@@ -84,3 +84,17 @@ export async function deleteFileVersion(
   await client.fileVersion.delete({ where: { id } })
   return true
 }
+
+export async function requestFileDownload(
+  key: FileVersion["key"]
+): Promise<string> {
+  const bucket = getBucket()
+  return await bucket.getSignedUrl("getObject", key)
+}
+
+export async function requestFileUpload(
+  key: FileVersion["key"]
+): Promise<string> {
+  const bucket = getBucket()
+  return await bucket.getSignedUrl("putObject", key)
+}
