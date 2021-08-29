@@ -106,23 +106,22 @@ export async function getDirectoryContents(
   }
   const { field, direction } = sort ?? {}
   const { pageLength = 20, page = 1 } = pagination ?? {}
+
   const [files, directories] = await client.$transaction([
-    client.directory
-      .findUnique({
-        where: { id },
-      })
-      .files({
-        where: { deletedAt: null },
-        orderBy: { name: "asc" },
-      }),
-    client.directory
-      .findUnique({
-        where: { id },
-      })
-      .directories({
-        where: { deletedAt: null },
-        orderBy: { name: "asc" },
-      }),
+    client.file.findMany({
+      where: {
+        ancestors: {
+          has: id,
+        },
+      },
+    }),
+    client.directory.findMany({
+      where: {
+        ancestors: {
+          has: id,
+        },
+      },
+    }),
   ])
   const contents =
     !field || field === "name"
@@ -366,6 +365,22 @@ export async function deleteDirectory(
   client: PrismaClient,
   id: Directory["id"]
 ): Promise<boolean> {
+  await client.$transaction([
+    client.file.deleteMany({
+      where: {
+        ancestors: {
+          has: id,
+        },
+      },
+    }),
+    client.directory.deleteMany({
+      where: {
+        ancestors: {
+          has: id,
+        },
+      },
+    }),
+  ])
   await client.directory.delete({ where: { id } })
   return true
 }

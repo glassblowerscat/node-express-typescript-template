@@ -151,6 +151,7 @@ export async function deleteFile(
   const updatedHistory = await updateFileHistory(client, id, { deleted: true })
   await client.$transaction([
     client.file.update({ where: { id }, data: { history: updatedHistory } }),
+    client.fileVersion.deleteMany({ where: { fileId: id } }),
     client.file.delete({ where: { id } }),
   ])
   return true
