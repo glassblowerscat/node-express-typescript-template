@@ -3,7 +3,8 @@ import { DateTime } from "luxon"
 import { dirname, join } from "path"
 import { FakeAwsFile, FileBucket, SIGNED_URL_EXPIRES } from "./bucket"
 
-const rootDir = ".files"
+const appRoot = require.main?.paths[0].split("node_modules")[0].slice(0, -1)
+const rootDir = `${appRoot ?? "."}/../.files`
 const baseUrl = `http://localhost:${process.env.LOCAL_PORT ?? 4000}/file`
 
 export function getLocalBucket(): FileBucket {
@@ -15,12 +16,16 @@ export function getLocalBucket(): FileBucket {
   }
 }
 
+function getPath(key: string): string {
+  return join(`${rootDir}`, key)
+}
+
 async function headObject(key: string): Promise<FakeAwsFile> {
   const path = getPath(key)
   try {
     await fs.stat(path)
-  } catch (e) {
-    throw new Error(e)
+  } catch (error) {
+    throw new Error(error)
   }
   const raw = await readFile(key + ".info")
   const parsedInfo = JSON.parse(raw.toString()) as FakeAwsFile
@@ -72,10 +77,6 @@ async function writeFile(key: string, data: Parameters<typeof fsWrite>[1]) {
     recursive: true,
   })
   await fs.writeFile(getPath(key), data)
-}
-
-function getPath(key: string): string {
-  return join(rootDir, key)
 }
 
 async function moveObject(oldKey: string, newKey: string) {
