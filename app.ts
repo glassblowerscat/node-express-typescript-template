@@ -59,7 +59,9 @@ const api = createApplication({
 const app = express()
 
 app.get("/file", function (req, res) {
-  void downloadLocalFile(req.originalUrl)
+  void downloadLocalFile(
+    `${req.protocol}://${req.get("host") ?? ""}${req.originalUrl}`
+  )
     .then((file) => {
       res.status(200).send(file)
     })
@@ -74,7 +76,10 @@ app.put("/file", function (req: Request<unknown, unknown, Buffer>, res) {
     ContentType: headers["content-type"] ?? "application/octet-stream",
     Body: req.body,
   }
-  void uploadLocalFile(req.originalUrl, data)
+  void uploadLocalFile(
+    `${req.protocol}://${req.get("host") ?? ""}${req.originalUrl}`,
+    data
+  )
     .then(() => res.status(200).send(true))
     .catch((error) => {
       res.status(400).send(error)
