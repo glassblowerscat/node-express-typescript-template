@@ -46,7 +46,7 @@ async function uploadFile(
       Body,
     })
     .promise()
-  const url = await getSignedUrl(bucketId, "getObject", key)
+  const url = await getSignedUrl("getObject", key, bucketId)
   return url
 }
 
