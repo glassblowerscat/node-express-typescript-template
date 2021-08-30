@@ -42,11 +42,12 @@ export async function createFileRecord(
   client: PrismaClient,
   file: CreateFileInput
 ): Promise<{ file: File; url: string }> {
-  const { name, directoryId, mimeType, size, key } = file
+  const { name, directoryId, mimeType, size, key: keyInput } = file
   const directory = directoryId
     ? await client.directory.findUnique({ where: { id: directoryId } })
     : null
   const ancestors = directory?.ancestors ?? []
+  const key = keyInput ?? (await generateId())
   const data = {
     name,
     directoryId,
@@ -57,13 +58,13 @@ export async function createFileRecord(
         name,
         mimeType,
         size,
-        ...(directory ? { directory: directory.name } : {}),
+        ...(directoryId ? { directoryId } : {}),
       },
     ] as Prisma.JsonArray,
     versions: {
       create: {
         name,
-        key: key ?? (await generateId()),
+        key,
         mimeType,
         size,
       },
@@ -74,7 +75,7 @@ export async function createFileRecord(
     include: { versions: true },
   })
   const bucket = getBucket()
-  const url = await bucket.getSignedUrl("putObject", name)
+  const url = await bucket.getSignedUrl("putObject", key)
   return { file: fileData, url }
 }
 
