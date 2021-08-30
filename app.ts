@@ -71,6 +71,8 @@ app.get("/file", function (req, res) {
     })
 })
 
+app.use(/\/((?!graphql).)*/, express.raw({ limit: "100000kb", type: "*/*" }))
+
 app.put("/file", function (req: Request<unknown, unknown, Buffer>, res) {
   const { headers } = req
   const data = {
