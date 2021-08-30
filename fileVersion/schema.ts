@@ -28,7 +28,15 @@ export const fileVersionModule = createModule({
       }
 
       type CreateFileVersionResult {
-        file: File!
+        id: ID!
+        name: String!
+        createdAt: String!
+        updatedAt: String
+        deletedAt: String
+        fileId: ID!
+        mimeType: String!
+        size: Int!
+        key: String!
         url: String!
       }
 
