@@ -26,9 +26,7 @@ function capFirst(str: string): string {
 }
 
 function getRandomInt(min: number, max: number): number {
-  return (
-    Math.floor(Math.random() * (max - min + 1)) + min
-  )
+  return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
 export function generateFileName(): string {
@@ -2888,8 +2886,8 @@ export function generateFileName(): string {
   ]
 
   const name =
-    capFirst(names1[getRandomInt(0, names1.length + 1)]) +
+    capFirst(names1[getRandomInt(0, names1.length - 1)]) +
     " " +
-    capFirst(names2[getRandomInt(0, names2.length + 1)])
+    capFirst(names2[getRandomInt(0, names2.length - 1)])
   return name
 }
