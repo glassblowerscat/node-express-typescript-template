@@ -2,9 +2,10 @@ import { File, FileVersion, Prisma, PrismaClient } from "@prisma/client"
 import { Pagination } from "../app"
 import { getBucket } from "../bucket"
 import { updateFileHistory } from "../file"
+import { generateId } from "../util/generators"
 
 const fileVersionInputFields = Prisma.validator<Prisma.FileVersionArgs>()({
-  select: { fileId: true, name: true, key: true, mimeType: true, size: true },
+  select: { fileId: true, name: true, mimeType: true, size: true },
 })
 
 export type CreateFileVersionInput = Prisma.FileVersionGetPayload<
@@ -23,7 +24,14 @@ export async function createFileVersionRecord(
     throw new Error("File does not exist")
   }
 
-  const versionData = await client.fileVersion.create({ data: fileVersion })
+  const key = await generateId()
+  const versionData = await client.fileVersion.create({
+    data: {
+      ...fileVersion,
+      key,
+    },
+    include: { file: true },
+  })
   await client.file.update({
     where: { id: file.id },
     data: {
@@ -32,11 +40,9 @@ export async function createFileVersionRecord(
       }),
     },
   })
-  // TODO: Do we need to manually update the directory
-  // with this new file?
   const bucket = getBucket()
   if (bucket) {
-    const url = await bucket.getSignedUrl("putObject", fileVersion.name)
+    const url = await bucket.getSignedUrl("putObject", key)
     return {
       ...versionData,
       url,
