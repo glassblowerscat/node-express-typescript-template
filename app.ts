@@ -57,7 +57,10 @@ const mainModule = createModule({
       },
     },
     Query: {
-      searchFiles: async (query: string): Promise<Array<Directory | File>> => {
+      searchFiles: async (
+        _: unknown,
+        { query }: { query: string }
+      ): Promise<Array<Directory | File>> => {
         const directories = (await findDirectories(prismaClient(), query)) ?? []
         const files = (await findFiles(prismaClient(), query)) ?? []
         return [...directories, ...files]
