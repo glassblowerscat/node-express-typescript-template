@@ -4,7 +4,7 @@ import { dirname, join } from "path"
 import { FakeAwsFile, FileBucket, SIGNED_URL_EXPIRES } from "./bucket"
 
 const appRoot = require.main?.paths[0].split("node_modules")[0].slice(0, -1)
-const rootDir = `${appRoot ?? "."}/../.files`
+const rootDir = `${appRoot ?? "."}/.files`
 const baseUrl = `http://localhost:${process.env.LOCAL_PORT ?? 4000}/file`
 
 export function getLocalBucket(): FileBucket {
