@@ -1,6 +1,6 @@
 // eslint-disable-next-line
 require("dotenv").config()
-import { Directory, File } from "@prisma/client"
+import { Directory, File, FileVersion } from "@prisma/client"
 import express, { Request } from "express"
 import { graphqlHTTP } from "express-graphql"
 import { createApplication, createModule, gql } from "graphql-modules"
@@ -42,6 +42,20 @@ const mainModule = createModule({
   ],
   resolvers: {
     JSON: GraphQLJSON,
+    FileNode: {
+      __resolveType(obj: File | FileVersion | Directory) {
+        if (Object.prototype.hasOwnProperty.call(obj, "parentId")) {
+          return "Directory"
+        }
+        if (Object.prototype.hasOwnProperty.call(obj, "fileId")) {
+          return "FileVersion"
+        }
+        if (Object.prototype.hasOwnProperty.call(obj, "directoryId")) {
+          return "File"
+        }
+        return null
+      },
+    },
     Query: {
       searchFiles: async (query: string): Promise<Array<Directory | File>> => {
         const directories = (await findDirectories(prismaClient(), query)) ?? []
