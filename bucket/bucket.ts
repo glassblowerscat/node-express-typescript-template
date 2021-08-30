@@ -15,8 +15,8 @@ export interface FileBucket {
     bucketId?: string
   ): Promise<string>
   headObject(key: string, bucketId?: string): Promise<HeadObjectOutput>
-  moveObject(oldKey: string, newKey: string, bucketId?: string): Promise<void>
-  saveFile(key: string, file: FakeAwsFile): Promise<string>
+  saveFile(key: string, file: FakeAwsFile, bucketId?: string): Promise<string>
+  deleteObject(key: string, bucketId?: string): Promise<void>
 }
 
 const bucketId = process.env.BUCKET_ID

@@ -11,8 +11,8 @@ export function getLocalBucket(): FileBucket {
   return {
     getSignedUrl,
     headObject,
-    moveObject,
     saveFile,
+    deleteObject,
   }
 }
 
@@ -36,11 +36,6 @@ async function headObject(key: string): Promise<FakeAwsFile> {
       : {}),
   }
   return info
-}
-
-async function copyObject(oldKey: string, newKey: string) {
-  await fs.copyFile(getPath(oldKey), getPath(newKey))
-  await fs.copyFile(getPath(oldKey) + ".info", getPath(newKey) + ".info")
 }
 
 async function deleteObject(key: string) {
@@ -77,11 +72,6 @@ async function writeFile(key: string, data: Parameters<typeof fsWrite>[1]) {
     recursive: true,
   })
   await fs.writeFile(getPath(key), data)
-}
-
-async function moveObject(oldKey: string, newKey: string) {
-  await copyObject(oldKey, newKey)
-  await deleteObject(oldKey)
 }
 
 function getSignedUrl(operation: string, key: string) {
