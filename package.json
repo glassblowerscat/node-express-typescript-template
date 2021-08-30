@@ -14,7 +14,8 @@
     "lint": "eslint . --fix --ext .ts,.js --max-warnings 0",
     "type-check": "tsc -p .",
     "build": "tsc --build",
-    "build:clean": "rm -rf dist && tsc --build"
+    "build:clean": "rm -rf dist && tsc --build",
+    "upload": "ts-node ./util/submit-upload.ts"
   },
   "author": "",
   "license": "ISC",
