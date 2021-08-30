@@ -1,5 +1,6 @@
 import { Directory, File, PrismaClient } from "@prisma/client"
 import { Pagination } from "../app"
+import { deleteFile } from "../file"
 
 export interface Sort {
   field: keyof Pick<File, "name" | "createdAt" | "updatedAt">
@@ -365,22 +366,24 @@ export async function deleteDirectory(
   client: PrismaClient,
   id: Directory["id"]
 ): Promise<boolean> {
-  await client.$transaction([
-    client.file.deleteMany({
-      where: {
-        ancestors: {
-          has: id,
-        },
+  await client.directory.deleteMany({
+    where: {
+      ancestors: {
+        has: id,
       },
-    }),
-    client.directory.deleteMany({
-      where: {
-        ancestors: {
-          has: id,
-        },
+    },
+  })
+  const files = await client.file.findMany({
+    where: {
+      ancestors: {
+        has: id,
       },
-    }),
-  ])
+    },
+    include: { versions: true },
+  })
+  for (const file of files) {
+    await deleteFile(client, file.id)
+  }
   await client.directory.delete({ where: { id } })
   return true
 }

@@ -87,7 +87,8 @@ export async function deleteFileVersion(
   client: PrismaClient,
   id: FileVersion["id"]
 ): Promise<boolean> {
-  await client.fileVersion.delete({ where: { id } })
+  const version = await client.fileVersion.delete({ where: { id } })
+  await getBucket().deleteObject(version.key)
   return true
 }
 

@@ -154,6 +154,12 @@ export async function deleteFile(
     client.fileVersion.deleteMany({ where: { fileId: id } }),
     client.file.delete({ where: { id } }),
   ])
+  const fileVersions = await client.fileVersion.findMany({
+    where: { fileId: id },
+  })
+  for (const version of fileVersions) {
+    await getBucket().deleteObject(version.key)
+  }
   return true
 }
 
