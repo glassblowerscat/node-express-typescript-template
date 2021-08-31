@@ -1,9 +1,14 @@
-import { Directory, File, PrismaClient } from "@prisma/client"
+import { Directory, File, Prisma, PrismaClient } from "@prisma/client"
 import { Pagination } from "../app"
 import { deleteFile } from "../file"
 
 export interface Sort {
   field: keyof Pick<File, "name" | "createdAt" | "updatedAt">
+  direction?: "ASC" | "DESC"
+}
+
+export interface RawSort {
+  field: "name" | "size" | "createdAt" | "updatedAt"
   direction?: "ASC" | "DESC"
 }
 
@@ -56,38 +61,83 @@ export async function findDirectories(
   })
 }
 
+export interface DirectoryContentsResult {
+  id: string
+  name: string
+  mimeType: string
+  size: number
+  key: string
+  createdAt: Date
+  updatedAt: Date
+  type: "File" | "Directory"
+}
+
+type RawResult = Array<
+  Omit<DirectoryContentsResult, "type"> & { type: "1" | "2" }
+>
+
 export async function getDirectoryContentsRaw(
   client: PrismaClient,
   id: Directory["id"],
   pagination?: Pagination,
-  sort?: Sort
-): Promise<Directory> {
-  return await client.$queryRaw<Directory>`
-    SELECT directories.id, directories.name, files.id, files.name, files.createdAt, files.updatedAt FROM
-      (SELECT * FROM directories WHERE id = ${id}
-        INNER JOIN (SELECT * FROM directories) AS subd
-          ON subd.directoryId = directories.id
-            AND subd.deletedAt = NULL
-        INNER JOIN (SELECT * FROM files
-            INNER JOIN file_versions
-              ON file_versions.fileID = files.id
-                AND file_versions.deletedAt = NULL)
-          ON files.directoryId = directories.id
-            AND files.deletedAt = NULL
-      )
-    ORDER BY ${
-      !sort || sort.field === "name"
-        ? `subd.name, f.name`
-        : `subd.${sort.field}, f.${sort.field}`
-    } ${sort?.direction ?? "ASC"}
-    ${
-      pagination
-        ? `LIMIT ${pagination.pageLength} OFFSET ${
-            pagination.pageLength * pagination.page - 1
-          }`
-        : ""
-    }
-  `
+  sort?: RawSort
+): Promise<DirectoryContentsResult[]> {
+  const { field = "name", direction = "ASC" } = sort ?? {}
+  const { pageLength = 20, page = 1 } = pagination ?? {}
+
+  const mainQuery = Prisma.sql`
+    SELECT f.id, f.name, f.ancestors, f."mimeType", f.size, f.key, f."createdAt", f."updatedAt", '2' as type from
+      (SELECT DISTINCT ON (files.id) * from files
+        INNER JOIN (SELECT "fileId", "mimeType", size, key from file_versions) as fv
+          ON fv."fileId" = files.id
+        ORDER BY files.id) as f
+    WHERE ${id} = ANY(ancestors)
+      AND "deletedAt" IS NULL
+    UNION ALL
+    SELECT d.id, d.name, d.ancestors, '' as "mimeType", 0 as size, '' as key, d."createdAt", d."updatedAt", '1' as type FROM directories d
+    WHERE ${id} = ANY(ancestors)
+      AND "deletedAt" IS NULL`
+
+  const paginationSql = Prisma.sql`
+    LIMIT ${pageLength} OFFSET ${pageLength * (page - 1)}`
+
+  const directionSql = direction === "DESC" ? Prisma.sql`DESC` : Prisma.empty
+
+  const results =
+    field === "name"
+      ? await client.$queryRaw<RawResult>`
+        ${mainQuery}
+          ORDER BY type, name ${directionSql}
+        ${paginationSql};
+      `
+      : field === "size"
+      ? await client.$queryRaw<RawResult>`
+        ${mainQuery}
+        ORDER BY type, size, name ${directionSql}
+        ${paginationSql};
+      `
+      : field === "createdAt"
+      ? await client.$queryRaw<RawResult>`
+        ${mainQuery}
+        ORDER BY "createdAt" ${directionSql}
+        ${paginationSql};
+      `
+      : field === "updatedAt"
+      ? await client.$queryRaw<RawResult>`
+        ${mainQuery}
+        ORDER BY "updatedAt" ${directionSql}
+        ${paginationSql};
+      `
+      : await client.$queryRaw<RawResult>`
+        ${mainQuery}
+        ORDER BY type, name ${directionSql}
+        ${paginationSql};
+      `
+
+  return results.map((result) => ({
+    ...result,
+    type: result.type === "1" ? "Directory" : "File",
+  }))
 }
 
 export async function getDirectoryContents(
