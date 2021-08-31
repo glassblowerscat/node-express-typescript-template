@@ -112,7 +112,9 @@ app.use(
   graphqlHTTP({
     schema: api.schema,
     customExecuteFn: api.createExecution(),
-    graphiql: process.env.NODE_ENV === "development",
+    graphiql:
+      process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "s3dev",
   })
 )
 
