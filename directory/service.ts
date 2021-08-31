@@ -223,7 +223,7 @@ export async function moveDirectory(
     where: { id: directoryId },
   })
 
-  if (!destinationDirectory) {
+  if (!destinationDirectory || destinationDirectory.ancestors.includes(id)) {
     throw new Error("Invalid target Directory")
   }
 
@@ -232,14 +232,14 @@ export async function moveDirectory(
 
   const childFilesOfThisDirectory = await client.file.findMany({
     where: {
-      directoryId: thisDirectory.parentId ?? "",
+      directoryId: thisDirectory.id ?? "",
     },
     select: { id: true, ancestors: true, history: true },
   })
   const descendentFilesOfThisDirectory = await client.file.findMany({
     where: {
       ancestors: {
-        has: thisDirectory.parentId ?? "",
+        has: thisDirectory.id ?? "",
       },
     },
     select: { id: true, ancestors: true, history: true },
@@ -247,14 +247,18 @@ export async function moveDirectory(
   const descendentDirectoriesOfThisDirectory = await client.directory.findMany({
     where: {
       ancestors: {
-        has: thisDirectory.parentId ?? "",
+        has: thisDirectory.id ?? "",
       },
     },
     select: { id: true, ancestors: true },
   })
   const descendentAncestorUpdates = [
     ...childFilesOfThisDirectory.map((file) => {
-      const updatedAncestors = [...ancestors, directoryId, id]
+      const updatedAncestors = [
+        ...ancestors,
+        destinationDirectory.id,
+        thisDirectory.id,
+      ]
       return client.file.update({
         where: {
           id: file.id,
@@ -277,8 +281,8 @@ export async function moveDirectory(
         ...new Set([
           ...file.ancestors.filter((a) => !oldAncestors.includes(a)),
           ...ancestors,
-          directoryId,
-          id,
+          destinationDirectory.id,
+          thisDirectory.id,
         ]),
       ]
       return client.file.update({
@@ -308,8 +312,8 @@ export async function moveDirectory(
             ...new Set([
               ...directory.ancestors.filter((a) => !oldAncestors.includes(a)),
               ...ancestors,
-              directoryId,
-              id,
+              destinationDirectory.id,
+              thisDirectory.id,
             ]),
           ],
         },
@@ -323,10 +327,10 @@ export async function moveDirectory(
     // new ancestors passed.
     client.directory.updateMany({
       where: {
-        parentId: thisDirectory.parentId ?? "",
+        parentId: thisDirectory.id ?? "",
       },
       data: {
-        ancestors: [...ancestors, directoryId, id],
+        ancestors: [...ancestors, destinationDirectory.id, thisDirectory.id],
       },
     }),
   ]
@@ -334,16 +338,19 @@ export async function moveDirectory(
   await client.$transaction([
     ...ancestorUpdates,
     client.directory.update({
-      where: { id },
+      where: { id: thisDirectory.id },
       data: {
-        parentId: directoryId,
-        ancestors: [...ancestors, directoryId],
+        parentId: destinationDirectory.id,
+        ancestors: [...ancestors, destinationDirectory.id],
       },
     }),
   ])
 
   // We already know this directory exists; let's just assert
-  return (await client.directory.findUnique({ where: { id } })) as Directory
+  return (await client.directory.findUnique({
+    where: { id: thisDirectory.id },
+    include: { directories: true, files: true },
+  })) as Directory
 }
 
 export async function renameDirectory(
