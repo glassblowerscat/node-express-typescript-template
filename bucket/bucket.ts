@@ -3,7 +3,7 @@ import { Duration } from "luxon"
 import { getLocalBucket } from "./localBucket"
 import { getS3Bucket } from "./s3Bucket"
 
-export const SIGNED_URL_EXPIRES = Duration.fromObject({ minutes: 60 })
+export const SIGNED_URL_EXPIRES = Duration.fromObject({ minutes: 10 })
 
 export type FakeAwsFile = Required<Pick<GetObjectOutput, "ContentType">> &
   Pick<GetObjectOutput, "ContentLength" | "LastModified"> & { Body: Buffer }
