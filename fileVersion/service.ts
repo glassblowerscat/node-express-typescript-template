@@ -42,7 +42,7 @@ export async function createFileVersionRecord(
   })
   const bucket = getBucket()
   if (bucket) {
-    const url = await bucket.getSignedUrl("putObject", key)
+    const url = await bucket.getSignedUrl("put", key)
     return {
       ...versionData,
       url,
@@ -96,12 +96,12 @@ export async function requestFileDownload(
   key: FileVersion["key"]
 ): Promise<string> {
   const bucket = getBucket()
-  return await bucket.getSignedUrl("getObject", key)
+  return await bucket.getSignedUrl("get", key)
 }
 
 export async function requestFileUpload(
   key: FileVersion["key"]
 ): Promise<string> {
   const bucket = getBucket()
-  return await bucket.getSignedUrl("putObject", key)
+  return await bucket.getSignedUrl("put", key)
 }

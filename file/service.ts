@@ -75,7 +75,7 @@ export async function createFileRecord(
     include: { versions: true },
   })
   const bucket = getBucket()
-  const url = await bucket.getSignedUrl("putObject", key)
+  const url = await bucket.getSignedUrl("put", key)
   return { file: fileData, url }
 }
 

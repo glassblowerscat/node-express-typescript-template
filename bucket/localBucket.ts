@@ -10,7 +10,7 @@ const baseUrl = `http://localhost:${process.env.LOCAL_PORT ?? 4000}/file`
 export function getLocalBucket(): FileBucket {
   return {
     getSignedUrl,
-    headObject,
+    /* headObject, */
     saveFile,
     deleteObject,
   }
@@ -61,7 +61,7 @@ export async function saveFile(
       LastModified: new Date(),
     })
   )
-  const url = await getSignedUrl("getObject", key)
+  const url = await getSignedUrl("get", key)
   return url
 }
 
@@ -74,7 +74,7 @@ async function writeFile(key: string, data: Parameters<typeof fsWrite>[1]) {
   await fs.writeFile(getPath(key), data)
 }
 
-function getSignedUrl(operation: string, key: string) {
+function getSignedUrl(operation: "get" | "put", key: string) {
   const signed = JSON.stringify({
     operation,
     key,
@@ -92,12 +92,12 @@ async function getObject(key: string): Promise<FakeAwsFile> {
 }
 
 export async function download(signedUrl: string): Promise<FakeAwsFile> {
-  const key = validateSignedUrl("getObject", signedUrl)
+  const key = validateSignedUrl("get", signedUrl)
   return await getObject(key)
 }
 
 export async function upload(signed: string, file: FakeAwsFile): Promise<void> {
-  const key = validateSignedUrl("putObject", signed)
+  const key = validateSignedUrl("put", signed)
   await saveFile(key, {
     ContentLength: file.Body.byteLength,
     LastModified: new Date(),

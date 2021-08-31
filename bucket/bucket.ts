@@ -1,4 +1,4 @@
-import { GetObjectOutput, HeadObjectOutput } from "aws-sdk/clients/s3"
+import { GetObjectOutput /* , HeadObjectOutput */ } from "@aws-sdk/client-s3"
 import { Duration } from "luxon"
 import { getLocalBucket } from "./localBucket"
 import { getS3Bucket } from "./s3Bucket"
@@ -10,11 +10,11 @@ export type FakeAwsFile = Required<Pick<GetObjectOutput, "ContentType">> &
 
 export interface FileBucket {
   getSignedUrl(
-    operation: string,
+    operation: "get" | "put",
     key: string,
     bucketId?: string
   ): Promise<string>
-  headObject(key: string, bucketId?: string): Promise<HeadObjectOutput>
+  // headObject(key: string, bucketId?: string): Promise<HeadObjectOutput>
   saveFile(key: string, file: FakeAwsFile, bucketId?: string): Promise<string>
   deleteObject(key: string, bucketId?: string): Promise<void>
 }
