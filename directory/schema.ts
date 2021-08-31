@@ -56,7 +56,7 @@ export const directoryModule = createModule({
           id: ID!
           pagination: PaginationInput
           sort: SortInput
-        ): Directory
+        ): [DirectoryContentsResult]!
         getDirectoryContentsRaw(
           id: ID!
           pagination: PaginationInput
@@ -98,7 +98,7 @@ export const directoryModule = createModule({
           pagination,
           sort,
         }: { id: string; pagination?: Pagination; sort?: directoryService.Sort }
-      ): Promise<Directory | null> => {
+      ): Promise<directoryService.DirectoryContentsResult[] | null> => {
         return await directoryService.getDirectoryContents(
           prismaClient(),
           id,

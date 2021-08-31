@@ -2,13 +2,21 @@ import { Directory, File, Prisma, PrismaClient } from "@prisma/client"
 import { Pagination } from "../app"
 import { deleteFile } from "../file"
 
-export interface Sort {
-  field: keyof Pick<File, "name" | "createdAt" | "updatedAt">
-  direction?: "ASC" | "DESC"
+export interface DirectoryContentsResult {
+  id: string
+  name: string
+  mimeType: string
+  size: number
+  key: string
+  createdAt: Date
+  updatedAt: Date
+  type: "File" | "Directory"
 }
-
-export interface RawSort {
-  field: "name" | "size" | "createdAt" | "updatedAt"
+export interface Sort {
+  field: keyof Pick<
+    DirectoryContentsResult,
+    "name" | "size" | "createdAt" | "updatedAt"
+  >
   direction?: "ASC" | "DESC"
 }
 
@@ -61,17 +69,6 @@ export async function findDirectories(
   })
 }
 
-export interface DirectoryContentsResult {
-  id: string
-  name: string
-  mimeType: string
-  size: number
-  key: string
-  createdAt: Date
-  updatedAt: Date
-  type: "File" | "Directory"
-}
-
 type RawResult = Array<
   Omit<DirectoryContentsResult, "type"> & { type: "1" | "2" }
 >
@@ -80,21 +77,21 @@ export async function getDirectoryContentsRaw(
   client: PrismaClient,
   id: Directory["id"],
   pagination?: Pagination,
-  sort?: RawSort
+  sort?: Sort
 ): Promise<DirectoryContentsResult[]> {
   const { field = "name", direction = "ASC" } = sort ?? {}
   const { pageLength = 20, page = 1 } = pagination ?? {}
 
   const mainQuery = Prisma.sql`
-    SELECT f.id, f.name, f.ancestors, f."mimeType", f.size, f.key, f."createdAt", f."updatedAt", '2' as type from
+    SELECT f.id, f.name, f.ancestors, f."mimeType", f.size, f.key, EXTRACT(EPOCH FROM f."createdAt") as "createdAt", EXTRACT(EPOCH FROM f."updatedAt") as "updatedAt", '2' as type from
       (SELECT DISTINCT ON (files.id) * from files
-        INNER JOIN (SELECT "fileId", "mimeType", size, key from file_versions) as fv
+        INNER JOIN (SELECT "fileId", "mimeType", size, key, "createdAt" as created_at from file_versions) as fv
           ON fv."fileId" = files.id
-        ORDER BY files.id) as f
+        ORDER BY files.id, fv.created_at DESC) as f
     WHERE ${id} = ANY(ancestors)
       AND "deletedAt" IS NULL
     UNION ALL
-    SELECT d.id, d.name, d.ancestors, '' as "mimeType", 0 as size, '' as key, d."createdAt", d."updatedAt", '1' as type FROM directories d
+    SELECT d.id, d.name, d.ancestors, '' as "mimeType", 0 as size, '' as key, EXTRACT(EPOCH FROM d."createdAt") as "createdAt", EXTRACT(EPOCH FROM d."updatedAt") as "updatedAt", '1' as type FROM directories d
     WHERE ${id} = ANY(ancestors)
       AND "deletedAt" IS NULL`
 
@@ -107,7 +104,7 @@ export async function getDirectoryContentsRaw(
     field === "name"
       ? await client.$queryRaw<RawResult>`
         ${mainQuery}
-          ORDER BY type, name ${directionSql}
+          ORDER BY name ${directionSql}
         ${paginationSql};
       `
       : field === "size"
@@ -119,21 +116,22 @@ export async function getDirectoryContentsRaw(
       : field === "createdAt"
       ? await client.$queryRaw<RawResult>`
         ${mainQuery}
-        ORDER BY "createdAt" ${directionSql}
+        ORDER BY type, "createdAt" ${directionSql}
         ${paginationSql};
       `
       : field === "updatedAt"
       ? await client.$queryRaw<RawResult>`
         ${mainQuery}
-        ORDER BY "updatedAt" ${directionSql}
+        ORDER BY type, "updatedAt" ${directionSql}
         ${paginationSql};
       `
       : await client.$queryRaw<RawResult>`
         ${mainQuery}
-        ORDER BY type, name ${directionSql}
+        ORDER BY name ${directionSql}
         ${paginationSql};
       `
 
+  console.log("file: service.ts ~ line 135 ~ results", results)
   return results.map((result) => ({
     ...result,
     type: result.type === "1" ? "Directory" : "File",
@@ -145,17 +143,15 @@ export async function getDirectoryContents(
   id: Directory["id"],
   pagination?: Pagination,
   sort?: Sort
-): Promise<Directory & { directories: Directory[] } & { files: File[] }> {
+): Promise<DirectoryContentsResult[]> {
   const directory = await client.directory.findUnique({
     where: { id },
   })
   if (!directory) {
     throw new Error("Directory not found")
   }
-  function isFile(item: File | Directory): item is File {
-    return Object.prototype.hasOwnProperty.call(item, "directoryId")
-  }
-  const { field, direction } = sort ?? {}
+
+  const { field = "name", direction = "ASC" } = sort ?? {}
   const { pageLength = 20, page = 1 } = pagination ?? {}
 
   const [files, directories] = await client.$transaction([
@@ -163,6 +159,12 @@ export async function getDirectoryContents(
       where: {
         ancestors: {
           has: id,
+        },
+      },
+      include: {
+        versions: {
+          distinct: ["fileId"],
+          orderBy: { createdAt: "desc" },
         },
       },
     }),
@@ -174,18 +176,47 @@ export async function getDirectoryContents(
       },
     }),
   ])
+  const filesWithVersion: DirectoryContentsResult[] = files.map((file) => {
+    const { id, name, createdAt, updatedAt, versions } = file
+    const { mimeType, size, key } = versions[0]
+    return {
+      id,
+      name,
+      createdAt,
+      updatedAt,
+      mimeType,
+      size,
+      key,
+      type: "File",
+    }
+  })
+  const directoriesWithVersion: DirectoryContentsResult[] = directories.map(
+    (directory) => {
+      const { id, name, createdAt, updatedAt } = directory
+      return {
+        id,
+        name,
+        createdAt,
+        updatedAt,
+        mimeType: "",
+        size: 0,
+        key: "",
+        type: "Directory",
+      }
+    }
+  )
   const contents =
-    !field || field === "name"
-      ? [...files, ...directories].sort((a, b) => {
+    field === "name"
+      ? [...filesWithVersion, ...directoriesWithVersion].sort((a, b) => {
           return a.name > b.name ? 1 : a.name < b.name ? -1 : 0
         })
       : // If we're sorting by anything other than name,
         // we'll put all directories first.
         [
-          ...directories.sort((a, b) => {
+          ...directoriesWithVersion.sort((a, b) => {
             return a.name > b.name ? 1 : a.name < b.name ? -1 : 0
           }),
-          ...files.sort((a, b) => {
+          ...filesWithVersion.sort((a, b) => {
             return a[field] > b[field]
               ? direction === "ASC"
                 ? 1
@@ -201,17 +232,7 @@ export async function getDirectoryContents(
     (page - 1) * pageLength,
     (page - 1) * pageLength + pageLength
   )
-  const paginatedFiles = paginatedContents.filter((item) =>
-    isFile(item)
-  ) as File[]
-  const paginatedDirectories = paginatedContents.filter(
-    (item) => !isFile(item)
-  ) as Directory[]
-  return {
-    ...directory,
-    files: paginatedFiles,
-    directories: paginatedDirectories,
-  }
+  return paginatedContents
 }
 
 export async function countDirectoryChildren(
