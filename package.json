@@ -8,6 +8,7 @@
     "db:reset": "rm -rf ./.files && NODE_ENV=development npx prisma migrate reset",
     "db:migrate": "npx prisma dev migrate",
     "dev": "NODE_ENV=development nodemon app.ts",
+    "dev:s3": "NODE_ENV=s3dev nodemon app.ts",
     "start": "tsc --build && node dist/app.js",
     "start:clean": "rm -rf dist && tsc --build && node dist/app.js",
     "format": "prettier . --write",
