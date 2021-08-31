@@ -9,7 +9,13 @@ import {
 import { getSignedUrl as getSignedS3Url } from "@aws-sdk/s3-request-presigner"
 import { FakeAwsFile, FileBucket, SIGNED_URL_EXPIRES } from "./bucket"
 
-const s3 = new S3Client({ region: process.env.AWS_REGION ?? "" })
+const s3 = new S3Client({
+  region: process.env.AWS_REGION ?? "",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? "",
+  },
+})
 
 export function getS3Bucket(bucketId: string): FileBucket {
   return {

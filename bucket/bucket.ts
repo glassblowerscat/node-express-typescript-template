@@ -19,7 +19,7 @@ export interface FileBucket {
   deleteObject(key: string, bucketId?: string): Promise<void>
 }
 
-const bucketId = process.env.BUCKET_ID
+const bucketId = process.env.AWS_BUCKET_NAME
 
 export function getBucket(): FileBucket {
   if (process.env.NODE_ENV === "development") {
