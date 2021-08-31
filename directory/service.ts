@@ -358,9 +358,20 @@ export async function renameDirectory(
   id: Directory["id"],
   name: Directory["name"]
 ): Promise<Directory> {
-  if (name === "root") {
+  if (name.toLowerCase() === "root") {
     throw new Error("Directory name 'root' is reserved")
   }
+
+  const directory = await client.directory.findUnique({ where: { id } })
+
+  if (!directory) {
+    throw new Error("Invalid Directory")
+  }
+
+  if (directory.name === "root") {
+    throw new Error("Root directory may not be renamed")
+  }
+
   return await client.directory.update({
     where: { id },
     data: {
@@ -378,6 +389,7 @@ export async function deleteDirectory(
       ancestors: {
         has: id,
       },
+      deletedAt: null,
     },
   })
   const files = await client.file.findMany({
@@ -385,6 +397,7 @@ export async function deleteDirectory(
       ancestors: {
         has: id,
       },
+      deletedAt: null,
     },
     include: { versions: true },
   })
